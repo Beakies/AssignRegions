@@ -1,0 +1,28 @@
+{
+    "id": "3874A228",
+    "path": "~/CODE/Random/AssignRegions/assignRegions_pt1.R",
+    "project_path": "assignRegions_pt1.R",
+    "type": "r_source",
+    "hash": "1491877808",
+    "contents": "",
+    "dirty": false,
+    "created": 1686239639769.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "58,0",
+        "scrollLine": "50",
+        "docOutlineVisible": "1",
+        "docOutlineSize": "150"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1686961332,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1686961332117,
+    "read_only": false,
+    "read_only_alternatives": []
+}
