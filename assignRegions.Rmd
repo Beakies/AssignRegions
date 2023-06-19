@@ -13,7 +13,7 @@ This R Markdown document is made to interactively update and view the DFO region
 
 ### REQUIREMENTS:
 
-1. An input file - formatted Excel sheet with sighting coordinates that requires DFO region assignment and will be checked for land whales. The name of input file needs to be manually updated. 
+1. An input file - formatted Excel sheet with sighting coordinates that requires DFO region assignment and will be checked for land whales. The name of input file needs to be manually updated in this Rmarkdown script in the code block below --->
 
 ```{r input file, echo=T}
 
@@ -37,13 +37,13 @@ save_map = TRUE
       - Canada: land area shapefile, sourced from National Atlas files on opengov.ca
 
 ```{r assign source region to output csv, echo=FALSE}
-source("scripts\assignRegions_pt1.R")
+source("scripts/assignRegions_pt1.R")
 ```
 
 ### Confirm DFO REGION of the points on a map
 
 ```{r visualize region on map, echo=FALSE}
-source("scripts\assignRegions_pt2.R")
+source("scripts/assignRegions_pt2.R")
 WSmap1
 
 saveWidget(WSmap1, file="WSDB_Regions.html")
