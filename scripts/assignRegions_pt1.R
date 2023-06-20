@@ -36,7 +36,9 @@
 
 ### TO RUN SCRIPT, MODIFY THESE LINES:
 
-# # specify input file
+# # specify xls input file
+# needs to have a tab named "val_entry"
+#coords should be named "LONGITUDE" and "LATITUDE"
 # input_file <-"FWDtoGLFValidatedEntry2022.xlsx"
 
 # install pacman package - only necessary the first time code is run, otherwise comment out this line
