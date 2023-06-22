@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 This R Markdown document is made to interactively update and view the DFO region where sightings records occur prior to import in the WSDB using leaflet 
@@ -50,15 +50,16 @@ saveWidget(WSmap1, file="WSDB_Regions.html")
 
 ```
 
-### Region code definitions:
+### Region boundary spatial data sources:
 
-|     MAR - DFO-Maritimes 
-|     QC - DFO-Quebec 
-|     NFLD - DFO-Newfoundland 
-|     GULF - DFO-Gulf 
-|     AR - DFO-Arctic 
-|     CAN - Within Canada but outside current regional boundaries (e.g., Pacific, Ontario)
-|     OT - Other - anywhere outside Canada
+|     MAR - From DFO Open Gov region shapefile + NAFO 
+|     QC - From DFO Open Gov region shapefile + input from GULF 
+|     NFLD - From DFO Open Gov region shapefile + NAFO 
+|     GULF - From DFO Open Gov region shapefile + input from GULF 
+|     AR - From DFO Open Gov region shapefile + NAFO 0A/0B
+|     O&P - From DFO Open Gov land region shapefile
+|     PAC - From DFO Open Gov land region shapefile & EEZ
+|     OT - Other - anywhere outside Canada EEZ (e.g., St. Pierre)
 
 
 ### Visual check for errors if any of the points are on land. 

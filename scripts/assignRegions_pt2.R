@@ -4,18 +4,17 @@ library(htmlwidgets)
 #requires part 1!
 # set up regions for map
 
-region_labels<-c("AR","GULF", "MAR", "NFLD", "QC", "CAN", "OT")
+region_labels<-c("AR","GULF", "MAR", "NFLD", "QC", "PAC", "O&P", "OT")
 land_check = c("Ok", "check land")
 
 mapregions<-regions %>% 
-  mutate(DFO_REGION = fct_expand(as_factor(DFO_REGION), region_labels))
+  mutate(DFO_REGION = factor(DFO_REGION, levels = region_labels))
 
 mapland<-points_sf %>% 
-  mutate(LAND = fct_expand(as_factor(land), land_check))
+  mutate(LAND = factor(land, levels = land_check))
 
 # set up color palettes for map
-colorpal<-c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02", "grey")
-colorpal2<-c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02","grey","black", "white")
+colorpal<-c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02", "#7B3E19", "grey")
 colorpal3<-c("red","grey")
 # show_col(colorpal)
 

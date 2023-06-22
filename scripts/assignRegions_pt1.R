@@ -56,7 +56,7 @@ sf_use_s2(FALSE)
 
 
 # load DFO Region shapefiles
-regions <-read_sf("shapefiles/DFO_NAFO_EEZ.shp")
+regions <-read_sf("shapefiles/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
 Canada<-read_sf("shapefiles/canada.shp") %>% 
@@ -94,7 +94,7 @@ join_land <- st_join(points_sf, Canada)
 # Extract the region code from the joined polygons
 land_code <- join_land$DFO_REGION
 
-# Create a new column 'region' in the points object and assign the region codes
+# Create a new column 'land' in the points object and assign the land codes
 points_sf$land <- ifelse(is.na(land_code), "Ok",
                            "check land")
 
