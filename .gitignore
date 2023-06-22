@@ -10,3 +10,4 @@ shapefiles/
 WSDB_Regions.html
 .Rproj**
 .Rproj.user
+*.pper
