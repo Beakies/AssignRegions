@@ -4,7 +4,9 @@
 .Ruserdata
 *.json
 assignRegions.html
+.Rproj.user**
 output/*
 shapefiles/
 WSDB_Regions.html
 
+.Rproj.user
