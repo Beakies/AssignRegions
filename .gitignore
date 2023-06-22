@@ -8,5 +8,5 @@ assignRegions.html
 output/*
 shapefiles/
 WSDB_Regions.html
-
+.Rproj**
 .Rproj.user
