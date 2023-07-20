@@ -62,48 +62,51 @@ regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
 Canada<-read_sf("Y:/shapefiles/canada.shp") %>% 
   st_transform(4326) %>% 
-  transmute(DFO_REGION = "land", geometry)
+  transmute(REGION = "land", geometry)
 
 # load input WS data
-WS_data <- read_excel(here("input", input_file), sheet = "val_entry")
+    WS_data <- read_excel(here("input", input_file), sheet = "val_entry")
+    
+    WS_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>%  
+      filter(!is.na(LATITUDE), !is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
 
-WS_coords <- WS_data %>%
-  mutate(ROWNUMBER = row_number())%>%  
-  filter(!is.na(LATITUDE), !is.na(LONGITUDE))
+#check any coordinates with NAs?
+    WS_NA_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>% 
+    filter(is.na(LATITUDE), is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
 
 # create shapefile of sighting coordinates
-points_sf <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))
+    WS_coords <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))
 
+      
 # Perform spatial join
-join_region <- st_join(points_sf, regions)
+    WS_coords <- st_join(WS_coords, regions)
+        
+      # Identify points with multiple regions?
+      # Extract the region code from the joined polygons
+          region_code <- WS_coords$DFO_REGION
 
-# Extract the region code from the joined polygons
-region_code <- join_region$DFO_REGION
-
-# Identify points with multiple regions
-overlap_points <- join_region[duplicated(join_region$ROWNUMBER) | duplicated(join_region$ROWNUMBER, fromLast = TRUE), ]
+      # Identify multiple regions?
+          overlap_points <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
 
 
-# Create a new column 'region' in the points object and assign the region codes
-points_sf$region <- ifelse(is.na(region_code), "OT",
-                           region_code)
+# Assign the region codes to REGION_CD variable
+        WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OT",
+                              DFO_REGION))
 
 #check if there may be overlap on land
-# Perform spatial join
-join_land <- st_join(points_sf, Canada)
-# Extract the region code from the joined polygons
-land_code <- join_land$DFO_REGION
+      # Perform spatial join
+        WS_coords <- st_join(WS_coords, Canada)
 
-# Create a new column 'land' in the points object and assign the land codes
-points_sf$land <- ifelse(is.na(land_code), "Ok",
-                           "check land")
+      # Create a new column 'land' in the points object and assign the land codes
+      WS_coords <- WS_coords%>%mutate(LAND = ifelse(is.na(REGION), "Ok",
+                                 "check land"))
 
-#add the codes back to the datasheet
-WS_coords$REGION_CD <-as_factor(points_sf$region)
-WS_coords$LAND<-as_factor(points_sf$land)
+WS_coords = WS_coords%>%dplyr::mutate(LONGITUDE = sf::st_coordinates(.)[,1],
+                                      LATITUDE = sf::st_coordinates(.)[,2])%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
 
 
 # output as .csv file
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
-write_csv(WS_coords, here("output", paste0(outfilename, "-REGIONCODES.csv.")))
-
+write_csv(WS_coords, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
+write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv.")))
+write_csv(overlap_points, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv.")), na="")

@@ -10,8 +10,8 @@ land_check = c("Ok", "check land")
 mapregions<-regions %>% 
   mutate(DFO_REGION = factor(DFO_REGION, levels = region_labels))
 
-mapland<-points_sf %>% 
-  mutate(LAND = factor(land, levels = land_check))
+mapland<-WS_coords %>% 
+  mutate(LAND = factor(LAND, levels = land_check))
 
 # set up color palettes for map
 colorpal<-c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02", "#7B3E19", "grey")
@@ -24,7 +24,7 @@ colorpal_fct = factor(region_labels, levels = region_labels)
 names(colorpal3) <-rev(land_check)
 regioncolors<-colorFactor(colorpal, mapregions$DFO_REGION)
 regioncolors_points<-colorFactor(colorpal, mapregions$DFO_REGION)
-landcolors_points<-colorFactor(colorpal3, points_sf$land)
+landcolors_points<-colorFactor(colorpal3, WS_coords$LAND)
 
 # build map to check regions---------
 
