@@ -45,8 +45,8 @@ source("scripts/assignRegions_pt1.R")
 ```{r visualize region on map, echo=FALSE}
 source("scripts/assignRegions_pt2.R")
 WSmap1
-
-saveWidget(WSmap1, file="WSDB_Regions.html")
+# 
+# saveWidget(WSmap1, file="WSDB_Regions.html")
 
 ```
 
