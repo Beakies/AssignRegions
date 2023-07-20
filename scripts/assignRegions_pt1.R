@@ -12,7 +12,7 @@
 
 # output: resulting .csv file with region codes
 
-# shapefiles: folder containing the following shapefiles:
+# Y:\shapefiles: folder containing the following Y:\shapefiles:
 
 #   DFO Regions: these are based on  NAFO regions (2022) and manually edited based on Gulf/ QC input and to remove overlap with land,
 #       snap edges together, etc.
@@ -55,11 +55,12 @@ pacman::p_load(sf, tidyverse, readxl, here, leaflet, scales, terra, ggrepel)
 sf_use_s2(FALSE)
 
 
-# load DFO Region shapefiles
-regions <-read_sf("shapefiles/DFO_NAFO_EEZ_Land.shp")
+# load DFO Region map OPP12 to Y:\\ to find shapefiles
+
+regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
-Canada<-read_sf("shapefiles/canada.shp") %>% 
+Canada<-read_sf("Y:/shapefiles/canada.shp") %>% 
   st_transform(4326) %>% 
   transmute(DFO_REGION = "land", geometry)
 
