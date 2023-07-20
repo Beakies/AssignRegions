@@ -65,7 +65,13 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
   transmute(REGION = "land", geometry)
 
 # load input WS data
-    WS_data <- read_excel(here("input", input_file), sheet = "val_entry")
+    WS_data <- read_excel(here("input", input_file), sheet = "val_entry")%>%select(-COMMONNAME, -URI, -SCIENTIF)
+    
+# check species
+    SP_data <- read_excel(here("input", input_file), sheet = "species codes")
+    WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
+    
+    #create shapefile based on coords
     
     WS_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>%  
       filter(!is.na(LATITUDE), !is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
@@ -79,7 +85,7 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
                                                                                                                  LATITUDE = sf::st_coordinates(.)[,2])
 
       
-# Perform spatial join
+# Perform spatial join between sightings and DFO Regions
     WS_coords <- st_join(WS_coords, regions)
         
       # Identify points with multiple regions?
