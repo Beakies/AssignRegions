@@ -75,19 +75,19 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
     filter(is.na(LATITUDE), is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
 
 # create shapefile of sighting coordinates
-    WS_coords <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))
+    WS_coords <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))%>%dplyr::mutate(LONGITUDE = sf::st_coordinates(.)[,1],
+                                                                                                                 LATITUDE = sf::st_coordinates(.)[,2])
 
       
 # Perform spatial join
     WS_coords <- st_join(WS_coords, regions)
         
       # Identify points with multiple regions?
-      # Extract the region code from the joined polygons
-          region_code <- WS_coords$DFO_REGION
-
-      # Identify multiple regions?
-          overlap_points <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
-
+        overlap_Regions <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
+        possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME")] ) |
+                                  duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME")], fromLast = T), ]
+ 
+        
 
 # Assign the region codes to REGION_CD variable
         WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OT",
@@ -101,12 +101,12 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
       WS_coords <- WS_coords%>%mutate(LAND = ifelse(is.na(REGION), "Ok",
                                  "check land"))
 
-WS_coords = WS_coords%>%dplyr::mutate(LONGITUDE = sf::st_coordinates(.)[,1],
-                                      LATITUDE = sf::st_coordinates(.)[,2])%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
+WS_coords = WS_coords%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
 
 
 # output as .csv file
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
 write_csv(WS_coords, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
 write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv.")))
-write_csv(overlap_points, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv.")), na="")
+write_csv(overlap_Regions, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv.")), na="")
+write_csv(possible_Dups, here("output", paste0(outfilename, "-possible_Dups.csv.")), na="")
