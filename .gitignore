@@ -11,6 +11,6 @@ WSDB_Regions.html
 .Rproj**
 .Rproj.user
 *.pper
-input/*
+input/**
 input/TestData.xlsx
 input/TestData1.xlsx
