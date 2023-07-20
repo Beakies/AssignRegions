@@ -22,12 +22,12 @@ input_file <-"FWDtoGLFValidatedEntry2022.xlsx"
 
 ```
 2. The correct folder structure and file names:
-  - *input*: folder contains Excel sheet of sighting coordinates to check land and assign to regions. The name of this file needs to be specified by editting the rmarkdown file in the code block above. 
+  - *input*: folder contains Excel sheet of sighting coordinates to check land and assign to regions. The name of this file needs to be specified by editing the rmarkdown file in the code block above. 
 
   - *output*: folder with .csv file containing results with REGION_CD and land variable data for each record. If you dont want an html map file and subfolder of html files for use outside of R, change save_map to FALSE
   
 ```{r save html map, echo=T}
-save_map = TRUE
+save_map = F
 ```
 
   - *shapefiles*: folder containing the following shapefiles:

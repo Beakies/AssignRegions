@@ -55,8 +55,8 @@ pacman::p_load(sf, tidyverse, readxl, here, leaflet, scales, terra, ggrepel)
 sf_use_s2(FALSE)
 
 
-# load DFO Region map OPP12 to Y:\\ to find shapefiles
-
+# load via mapped Y drive using OPP12 to find shapefiles
+# or if shapefiles folder is stored locally: "shapefiles/DFO_NAFO_EEZ_Land.shp"
 regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
@@ -68,9 +68,8 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
 WS_data <- read_excel(here("input", input_file), sheet = "val_entry")
 
 WS_coords <- WS_data %>%
-  mutate(ROWNUMBER = row_number()) %>%
-  select(ROWNUMBER, LONGITUDE, LATITUDE) %>%  
-  drop_na()
+  mutate(ROWNUMBER = row_number())%>%  
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE))
 
 # create shapefile of sighting coordinates
 points_sf <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))
