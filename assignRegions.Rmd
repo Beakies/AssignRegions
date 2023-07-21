@@ -1,7 +1,7 @@
 ---
 title: "Assign DFO Regions to WSDB records"
 author: "LJ Feyrer, J. Stanistreet"
-date: "`r Sys.Date()`"
+date: "Updated: `r Sys.Date()`"
 output: html_document
 ---
 
@@ -13,7 +13,11 @@ This R Markdown document is made to interactively update and view the DFO region
 
 ### REQUIREMENTS:
 
-1. An input file - formatted Excel sheet with sighting coordinates that requires DFO region assignment and will be checked for land whales. The name of input file needs to be manually updated in this Rmarkdown script in the code block below --->
+1. An input file - formatted Excel sheet with two tabs:
+    (A) a sighting data sheet prepped with clean coordinate (LATITUDE/LONGITUDE) and species code (SPECIES_CD) info that will be used for DFO region assignment and will be checked for "land whales."
+    (B) a tab with the list of species codes and associated species names  
+
+The name of input file needs to be manually updated in this Rmarkdown script in the code block below --->
 
 ```{r input file, echo=T}
 
@@ -24,7 +28,13 @@ input_file <-"Test_species_codes.xlsx"
 2. The correct folder structure and file names:
   - *input*: folder contains Excel sheet of sighting coordinates to check land and assign to regions. The name of this file needs to be specified by editing the rmarkdown file in the code block above. 
 
-  - *output*: folder with .csv file containing results with REGION_CD and land variable data for each record. If you dont want an html map file and subfolder of html files for use outside of R, change save_map to FALSE
+  - *output*: folder containing .csv files of results: 
+    - *FileName-REGIONCODES.csv* - The data with regions, land whales and species code variables populated
+    - *FileName-possible_Dups.csv* - The records that may be possible duplicates based on matching coordinates and Date/Time stamps
+    - *FileName-NA_COORDS.csv* - The records that have NA values or errors with given coordinate info   
+    - *FileName-MULTIPLE_REGIONS.csv* - Any records that fall on the line between regions and have two region assignments (rare, maybe impossible with current analysis, but just in case!)
+    
+If you want an html map file and subfolder of html files for use outside of R, change save_map to TRUE
   
 ```{r save html map, echo=T}
 save_map = F
