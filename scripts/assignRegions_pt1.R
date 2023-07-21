@@ -108,11 +108,11 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
                                  "check land"))
 
 WS_coords = WS_coords%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
-
+WS_coords1 = WS_coords%>%select(-c(,72:82))%>%st_drop_geometry()
 
 # output as .csv file
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
-write_csv(WS_coords, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
+write_csv(WS_coords1, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
 write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv.")))
 write_csv(overlap_Regions, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv.")), na="")
 write_csv(possible_Dups, here("output", paste0(outfilename, "-possible_Dups.csv.")), na="")

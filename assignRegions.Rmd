@@ -18,7 +18,7 @@ This R Markdown document is made to interactively update and view the DFO region
 ```{r input file, echo=T}
 
 # Current xls file is specified in quotations here:
-input_file <-"FWDtoGLFValidatedEntry2022.xlsx"
+input_file <-"Test_species_codes.xlsx"
 
 ```
 2. The correct folder structure and file names:
