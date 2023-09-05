@@ -24,11 +24,11 @@
 
 #MAR    DFO-Maritimes
 #QC     DFO-Quebec
-#NFLD   DFO-Newfoundland
+#NL   DFO-Newfoundland
 #GULF   DFO-Gulf
 #AR     DFO-Arctic
 #CAN    Within Canada but outside current regional boundaries (e.g., Pacific, Ontario)
-#OT     Other - anywhere outside Canada
+#OTHER     Other - anywhere outside Canada
 #land   Location appears to be on land - check for errors in coordinates
 
 
