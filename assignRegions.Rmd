@@ -15,14 +15,17 @@ This R Markdown document is made to interactively update and view the DFO region
 
 1. An input file - formatted Excel sheet with two tabs:
     (A) a sighting data sheet prepped with clean coordinate (LATITUDE/LONGITUDE) and species code (SPECIES_CD) info that will be used for DFO region assignment and will be checked for "land whales."
-    (B) a tab with the list of species codes and associated species names  
+    (B) a "species codes" tab in the input sheet or separate xlsx in the input folder with a tab called "species codes." This defines the list of species codes and associated species names  (This is currently specified as a separate xlsx in "species" object below)
 
-The name of input file needs to be manually updated in this Rmarkdown script in the code block below --->
+The name of input files needs to be manually updated in this Rmarkdown script in the code block below --->
 
 ```{r input file, echo=T}
 
 # Current xls file is specified in quotations here:
-input_file <-"Test_species_codes.xlsx"
+input_file <-"Late_ASO.xlsx"
+sheet = "Sheet1"
+
+species = "speciesCodes.xlsx"
 
 ```
 2. The correct folder structure and file names:
