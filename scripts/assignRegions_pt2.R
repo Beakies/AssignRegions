@@ -4,7 +4,7 @@ library(htmlwidgets)
 #requires part 1!
 # set up regions for map
 
-region_labels<-c("AR","GULF", "MAR", "NFLD", "QC", "PAC", "O&P", "OT")
+region_labels<-c("AR","GULF", "MAR", "NL", "QC", "PAC", "O&P", "OTHER")
 land_check = c("Ok", "check land")
 
 mapregions<-regions %>% 
