@@ -90,8 +90,10 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
         
       # Identify points with multiple regions?
         overlap_Regions <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
-        possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME")] ) |
-                                  duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME")], fromLast = T), ]
+        
+      # Identify possible duplicate records?  
+        possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")] ) |
+                                  duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
  
         
 
@@ -108,7 +110,7 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
                                  "check land"))
 
 WS_coords = WS_coords%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
-WS_coords1 = WS_coords%>%select(-c(,72:82))%>%st_drop_geometry()
+WS_coords1 = WS_coords%>%st_drop_geometry()
 
 # output as .csv file
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
