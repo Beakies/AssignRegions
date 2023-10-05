@@ -15,16 +15,16 @@ mapland<-WS_coords %>%
 
 # set up color palettes for map
 colorpal<-c("#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02", "#7B3E19", "grey")
-colorpal3<-c("red","grey")
+colorpal3<-rev(c("red","grey"))
 # show_col(colorpal)
 
 
 names(colorpal) <-factor(region_labels, levels = region_labels)
 colorpal_fct = factor(region_labels, levels = region_labels)
-names(colorpal3) <-rev(land_check)
+names(colorpal3) <-(land_check)
 regioncolors<-colorFactor(colorpal, mapregions$DFO_REGION)
 regioncolors_points<-colorFactor(colorpal, mapregions$DFO_REGION)
-landcolors_points<-colorFactor(colorpal3, WS_coords$LAND)
+landcolors_points<-colorFactor(colorpal3, WS_coords$LAND) #NEED TO FIX THIS WHEN THER IS NO CHECK FACTOR LEVEL IN DATA
 
 # build map to check regions---------
 
@@ -105,7 +105,7 @@ addCircleMarkers(data = WS_coords,
                    "Region: ", WS_coords$REGION_CD)))%>%
   addLegend("bottomright", 
             colors = colorpal3,
-            labels = c("Check", "OK"),
+            labels = names(colorpal3),
             title = "Land whales?",
             opacity = .5)
 

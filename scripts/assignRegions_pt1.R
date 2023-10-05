@@ -65,11 +65,15 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
   transmute(REGION = "land", geometry)
 
 # load input WS data
-    WS_data <- read_excel(here("input", input_file), sheet = sheet)%>%select(-COMMONNAME, -URI, -SCIENTIF)
-    
+options(digits = 5)
+    WS_data <- read_csv(here("input", input_file), col_types = "c" )%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
+      mutate(LATITUDE =gsub("[^0-9.-]", "", LATITUDE), LONGITUDE = gsub("[^0-9.-]", "", LONGITUDE))
+  
 # check species, add common names and scientific names based on codes
-    SP_data <- read_excel(here("input", species), sheet = "species codes")
+    SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
+    
+    
     
     #create shapefile based on coords
     
