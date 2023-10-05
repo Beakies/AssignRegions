@@ -22,8 +22,8 @@ The name of input files needs to be manually updated in this Rmarkdown script in
 ```{r input file, echo=T}
 
 # Current xls file is specified in quotations here:
-input_file <-"Late_ASO.xlsx"
-sheet = "Sheet1"
+input_file <-"CoriolisMultiBeamValidatedEntry2023.xlsx"
+sheet = "val_entry"
 
 species = "speciesCodes.xlsx"
 
