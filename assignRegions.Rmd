@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, cache = F)
 ```
 
 This R Markdown document is made to interactively update and view the DFO region where sightings records occur prior to import in the WSDB using leaflet 

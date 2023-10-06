@@ -66,8 +66,8 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
 
 # load input WS data
 options(digits = 5)
-    WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c") )%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
-      mutate(LATITUDE =gsub("[^0-9.-]", "", LATITUDE), LONGITUDE = gsub("[^0-9.-]", "", LONGITUDE))
+    WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
+      mutate(LATITUDE =gsub("[^0-9.-]", "", LATITUDE), LONGITUDE = gsub("[^0-9.-]", "", LONGITUDE), SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
 # check species, add common names and scientific names based on codes
     SP_data <- read_csv(here("input", species), show_col_types = F)
