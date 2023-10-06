@@ -24,6 +24,8 @@ The name of input files needs to be manually updated in this Rmarkdown script in
 # INPUTS NEED TO BE CSV files, file names are specified in quotations here:
 input_file <-"CoriolisMultiBeamValidatedEntry2023.csv"
 species = "speciesCodes.csv" 
+#source lat long conversion function
+source("scripts/LatLong_convert.R")
 
 ```
 2. The correct folder structure and file names:

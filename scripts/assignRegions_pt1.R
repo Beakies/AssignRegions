@@ -64,10 +64,13 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
+
+
 # load input WS data
 options(digits = 5)
     WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
-      mutate(LATITUDE =gsub("[^0-9.-]", "", LATITUDE), LONGITUDE = gsub("[^0-9.-]", "", LONGITUDE), SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
+      mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,#apply function to clean coordinates and ensure LONGITUDE is negative
+      SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
 # check species, add common names and scientific names based on codes
     SP_data <- read_csv(here("input", species), show_col_types = F)
