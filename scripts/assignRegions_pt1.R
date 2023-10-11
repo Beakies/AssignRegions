@@ -64,8 +64,6 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
-
-
 # load input WS data
 options(digits = 5)
     WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
@@ -75,7 +73,6 @@ options(digits = 5)
 # check species, add common names and scientific names based on codes
     SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
-    
     
     
     #create shapefile based on coords
@@ -90,8 +87,6 @@ options(digits = 5)
 # create shapefile of sighting coordinates
     WS_coords <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))%>%dplyr::mutate(LONGITUDE = sf::st_coordinates(.)[,1],
                                                                                                                  LATITUDE = sf::st_coordinates(.)[,2])
-
-      
 # Perform spatial join between sightings and DFO Regions
     WS_coords <- st_join(WS_coords, regions)
         
@@ -102,8 +97,6 @@ options(digits = 5)
         possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")] ) |
                                   duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
  
-        
-
 # Assign the region codes to REGION_CD variable
         WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OT",
                               DFO_REGION))
