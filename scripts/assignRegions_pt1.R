@@ -70,6 +70,7 @@ options(digits = 5)
       mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,#apply function to clean coordinates and ensure LONGITUDE is negative
       SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
+
 # check species, add common names and scientific names based on codes
     SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
