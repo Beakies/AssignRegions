@@ -110,8 +110,9 @@ options(digits = 5)
       WS_coords <- WS_coords%>%mutate(LAND = ifelse(is.na(REGION), "Ok",
                                  "check land"))
 
-WS_coords = WS_coords%>%select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, everything())
-WS_coords1 = WS_coords%>%st_drop_geometry()
+WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())
+WS_coords1 = WS_coords%>%st_drop_geometry()%>%dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	Region_INU,	Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
+
 
 # output as .csv file
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
