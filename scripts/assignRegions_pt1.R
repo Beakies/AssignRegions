@@ -67,7 +67,8 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
 # load input WS data
 options(digits = 5)
     WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
-      mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,#apply function to clean coordinates and ensure LONGITUDE is negative
+      mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,
+             #apply function to clean coordinates and ensure LONGITUDE is negative, if long is POSTITIVE this will be wrong.
       SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
 

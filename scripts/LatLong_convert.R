@@ -15,12 +15,20 @@ convert_to_decimal_degrees <- function(coord) {
   # Remove degree symbols and other unwanted characters
   coord <- iconv(coord, from = "latin1", to = "ASCII", sub = "")
   
+  # Handle coordinates with 'd' for degrees and cardinal directions
+  coord <- gsub("d", " ", coord)
+  coord <- gsub("[NW]", "", coord)
+  
   # Insert a space between degrees and minutes if needed
   if (grepl("^\\d{4,}", coord)) {
     coord <- paste0(substr(coord, 1, 2), " ", substr(coord, 3, nchar(coord)))
   }
+  # Trim leading and trailing spaces
+  coord <- trimws(coord)
   
+  #remove any characters except numbers
   cleaned_coord <- gsub("[^-0-9. ]", "", coord)
+ 
   
   # Split by space to get degrees, minutes, and seconds
   components <- unlist(strsplit(cleaned_coord, " "))
