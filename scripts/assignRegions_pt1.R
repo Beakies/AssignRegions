@@ -100,7 +100,7 @@ options(digits = 5)
                                   duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
  
 # Assign the region codes to REGION_CD variable
-        WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OT",
+        WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OTHER",
                               DFO_REGION))
 
 #check if there may be overlap on land
