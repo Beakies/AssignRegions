@@ -95,9 +95,11 @@ options(digits = 5)
       # Identify points with multiple regions?
         overlap_Regions <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
         
-      # Identify possible duplicate records?  
+      # Identify possible duplicate records based on all fields matching perfectly  
         possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")] ) |
                                   duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
+        
+        #check if coords rounded to first decimal place ###NEED TO DO THIS###
  
 # Assign the region codes to REGION_CD variable
         WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OTHER",
@@ -110,6 +112,13 @@ options(digits = 5)
       # Create a new column 'land' in the points object and assign the land codes
       WS_coords <- WS_coords%>%mutate(LAND = ifelse(is.na(REGION), "Ok",
                                  "check land"))
+      
+      
+      ### remove colons from "Time" field
+      
+      ### format Date as excel date number
+      
+      ### Take SPECIES_CD to populate COMMONNAME, URI, SCIENTIF fields from species codes.csv
 
 WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())
 WS_coords1 = WS_coords%>%st_drop_geometry()%>%dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	Region_INU,	Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
