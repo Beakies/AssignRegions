@@ -50,13 +50,13 @@ save_map = F
       - Canada: land area shapefile, sourced from National Atlas files on opengov.ca
 
 ```{r assign source region to output csv, echo=FALSE}
-source("scripts/assignRegions_pt1.R")
+source("scripts/prepWSDB_pt1.R")
 ```
 
 ### Confirm DFO REGION of the points on a map
 
 ```{r visualize region on map, echo=FALSE}
-source("scripts/assignRegions_pt2.R")
+source("scripts/checkMap_pt2.R")
 WSmap1
 # 
 # saveWidget(WSmap1, file="WSDB_Regions.html")
