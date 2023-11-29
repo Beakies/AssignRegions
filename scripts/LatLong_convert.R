@@ -1,6 +1,6 @@
 # Coordinate conversion from Degrees Decimal.Minutes to DD using R
 # Laura Feyrer 2023
-#opens in assignRegions project
+#opens in prepWSDB project
 
 # #libraries
 # library(readr)
