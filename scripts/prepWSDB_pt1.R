@@ -1,8 +1,16 @@
 
-# Script to assign region code to each sighting location and view all sighting locations on map
+# Script to prep whale sightings data for entry in the WSDB
+# includes steps to: 
+  ## clean lat longs
+  ## check for internal duplicates
+  ## check for land whales
+  ## prep time field for SQL script
+  ## populate scientific and common names based on species codes
+  ## assign DFO region to each sighting location and view all sighting locations on map 
+#
+# by L. Feyrer 2023-11-29
 
-# J. Stanistreet 2022-12-07
-# updated by L. Feyrer 2023-06-07
+# credit to assign regions leaflet maps: J. Stanistreet 2022-12-07
 
 #####################################################
 
@@ -36,10 +44,8 @@
 
 ### TO RUN SCRIPT, MODIFY THESE LINES:
 
-# # specify xls input file
-# needs to have a tab named "val_entry"
+# # specify csv input file
 #coords should be named "LONGITUDE" and "LATITUDE"
-# input_file <-"FWDtoGLFValidatedEntry2022.xlsx"
 
 # install pacman package - only necessary the first time code is run, otherwise comment out this line
 #install.packages("pacman")
@@ -47,7 +53,7 @@
 # run all code below!
 
 
-######## PART 1: assign region ########
+######## PART 1: prep data ########
 
 # use pacman to install and load required packages
 
@@ -115,13 +121,29 @@ options(digits = 5)
       
       
       ### remove colons from "Time" field
+      WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
       
       ### format Date as excel date number
+      # Convert WS_DATE to Date object in R (assuming dates are in m/d/y format)
+      WS_coords <- WS_coords %>% 
+        mutate(WS_DATE = as.Date(WS_DATE, format = "%m/%d/%Y"))
+      
+      # Excel's date number starts from 1899-12-30
+      excel_epoch <- as.Date("1899-12-30")
+      
+      # Calculate Excel date number - populates in new field named WS_DATE_EXCEL
+      WS_coords <- WS_coords %>%
+        mutate(WS_DATE_EXCEL = as.numeric(WS_DATE - excel_epoch))
       
       ### Take SPECIES_CD to populate COMMONNAME, URI, SCIENTIF fields from species codes.csv
+      
+      ##clean up df
 
-WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())
-WS_coords1 = WS_coords%>%st_drop_geometry()%>%dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	Region_INU,	Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
+      WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
+        mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL) #keep WS_DATE in original format just in case
+      #remove the random shapefile fields
+      WS_coords1 = WS_coords%>%st_drop_geometry()%>%
+        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
 
 # output as .csv file
