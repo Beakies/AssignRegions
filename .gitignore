@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 *.json
-assignRegions.html
+**.html
 .Rproj.user**
 output/*
 shapefiles/
