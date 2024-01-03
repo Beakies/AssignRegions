@@ -63,10 +63,10 @@ sf_use_s2(FALSE)
 
 # load via mapped Y drive using OPP12 to find shapefiles
 # or if shapefiles folder is stored locally: "shapefiles/DFO_NAFO_EEZ_Land.shp"
-regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
+regions <-read_sf("shapefiles/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
-Canada<-read_sf("Y:/shapefiles/canada.shp") %>% 
+Canada<-read_sf("shapefiles/canada.shp") %>% 
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
@@ -137,9 +137,10 @@ options(digits = 5)
       
       ### Take SPECIES_CD to populate COMMONNAME, URI, SCIENTIF fields from species codes.csv
       
+      WS_coords_sp = WS_coords%>%select(-URI, -SCIENTIF, -COMMONNAME)%>%left_join(SP_data, by = "SPECIES_CD")
       ##clean up df
 
-      WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
+      WS_coords = WS_coords_sp%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
         mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL) #keep WS_DATE in original format just in case
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
