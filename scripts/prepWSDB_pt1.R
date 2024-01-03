@@ -63,10 +63,10 @@ sf_use_s2(FALSE)
 
 # load via mapped Y drive using OPP12 to find shapefiles
 # or if shapefiles folder is stored locally: "shapefiles/DFO_NAFO_EEZ_Land.shp"
-regions <-read_sf("shapefiles/DFO_NAFO_EEZ_Land.shp")
+regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
-Canada<-read_sf("shapefiles/canada.shp") %>% 
+Canada<-read_sf("Y:/shapefiles/canada.shp") %>% 
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
