@@ -123,25 +123,37 @@ options(digits = 5)
       ### remove colons from "Time" field
       WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
       
-      ### format Date as excel date number
-      # Convert WS_DATE to Date object in R (assuming dates are in m/d/y format)
+      ### function to format various Date formats as an excel date number
+      convert_to_excel_date <- Vectorize(function(date_string) {
+        # Attempt to parse the date in different formats
+        if (grepl("-", date_string)) {
+          parsed_date <- dmy(date_string)
+        } else {
+          parsed_date <- mdy(date_string)
+        }
+        
+        # Handle cases where parsing fails
+        if (is.na(parsed_date)) {
+          stop("Date format not recognized")
+        }
+        
+        # Excel's origin date (December 30, 1899)
+        excel_origin <- as.Date("1899-12-30")
+        
+        # Calculate the difference in days
+        excel_date_number <- as.numeric(difftime(parsed_date, excel_origin, units = "days"))
+        
+        return(excel_date_number)
+      })
+      
+      # Convert WS_DATE to Date object in R ()
       WS_coords <- WS_coords %>% 
-        mutate(WS_DATE = as.Date(WS_DATE, format = "%m/%d/%Y"))
-      
-      # Excel's date number starts from 1899-12-30
-      excel_epoch <- as.Date("1899-12-30")
-      
-      # Calculate Excel date number - populates in new field named WS_DATE_EXCEL
-      WS_coords <- WS_coords %>%
-        mutate(WS_DATE_EXCEL = as.numeric(WS_DATE - excel_epoch))
-      
-      ### Take SPECIES_CD to populate COMMONNAME, URI, SCIENTIF fields from species codes.csv
-      
-      WS_coords_sp = WS_coords%>%select(-URI, -SCIENTIF, -COMMONNAME)%>%left_join(SP_data, by = "SPECIES_CD")
-      ##clean up df
+        mutate(WS_DATE_EXCEL = convert_to_excel_date(WS_DATE)) 
 
-      WS_coords = WS_coords_sp%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
+      ##clean up df
+      WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
         mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL) #keep WS_DATE in original format just in case
+      
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
         dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
