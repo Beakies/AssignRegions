@@ -120,11 +120,6 @@ options(digits = 5)
                                  "check land"))
       
       
-#remove colons from "Time" fields----
-      WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
-      WS_coords$WS_TIME_UTC <- gsub(":", "", WS_coords$WS_TIME_UTC)
-      
-
 # Convert WS_DATE to Date object -----
       
 ### function to format various Date formats as an excel date number
@@ -153,6 +148,33 @@ options(digits = 5)
       # Run function to convert WS_DATE 
       WS_coords <- WS_coords %>% 
         mutate(WS_DATE_EXCEL = convert_to_excel_date(WS_DATE)) 
+      
+  
+  # #check region and correct UTC TIME----
+  #     # Create a function to adjust time based on region
+  #     adjust_to_utc <- function(time, region) {
+  #       # Define time zone offsets
+  #       offsets <- c("AR" = -3, "GULF" = -3, "MAR" = -3, "NL" = -2.5, "QC" = -4, "PAC" = -7, "O&P" = -5, "OTHER" = 0)
+  #       
+  #       # Adjust the time
+  #       adjusted_time <- time - hours(offsets[region])
+  #       
+  #       # Convert to UTC
+  #       # Note: This assumes the original time is in daylight savings time
+  #       adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
+  #       
+  #       return(adjusted_time)
+  #     }
+  #     
+  #     # Apply the function to create a new UTC_1 time variable
+  #     # Assuming your time column is named 'local_time' and region column is 'region'
+  #     WS_coords <- WS_coords %>% 
+  #       mutate(UTC_time = adjust_to_utc(ymd_hms(WS_TIME), REGION_CD))
+  #     
+      #remove colons from "Time" fields----
+      WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
+      WS_coords$WS_TIME_UTC <- gsub(":", "", WS_coords$WS_TIME_UTC)
+      
 
   #clean up df-----
       WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
