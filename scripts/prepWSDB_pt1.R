@@ -70,48 +70,48 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
-# load input WS data
+# load input WS data---
 options(digits = 5)
-    WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%dplyr::select(-COMMONNAME, -URI, -SCIENTIF)%>%
+    WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%
       mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,
              #apply function to clean coordinates and ensure LONGITUDE is negative, if long is POSTITIVE this will be wrong.
       SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
 
-# check species, add common names and scientific names based on codes
+# check species, add common names and scientific names based on codes---
     SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
     
     
-    #create shapefile based on coords
+    #create shapefile based on coords----
     
     WS_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>%  
       filter(!is.na(LATITUDE), !is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
 
-#check any coordinates with NAs?
+#check any coordinates with NAs?-----
     WS_NA_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>% 
     filter(is.na(LATITUDE), is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
 
-# create shapefile of sighting coordinates
+# create shapefile of sighting coordinates-----
     WS_coords <- st_as_sf(WS_coords, coords = c("LONGITUDE", "LATITUDE"), crs = st_crs(regions))%>%dplyr::mutate(LONGITUDE = sf::st_coordinates(.)[,1],
                                                                                                                  LATITUDE = sf::st_coordinates(.)[,2])
-# Perform spatial join between sightings and DFO Regions
+# Perform spatial join between sightings and DFO Regions-----
     WS_coords <- st_join(WS_coords, regions)
         
       # Identify points with multiple regions?
         overlap_Regions <- WS_coords[duplicated(WS_coords$ROWNUMBER) | duplicated(WS_coords$ROWNUMBER, fromLast = TRUE), ]
         
-      # Identify possible duplicate records based on all fields matching perfectly  
+      # Identify possible duplicate records based on Lat, Long, Date, Time, Species fields matching perfectly----
         possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")] ) |
                                   duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
         
         #check if coords rounded to first decimal place ###NEED TO DO THIS###
  
-# Assign the region codes to REGION_CD variable
+# Assign the region codes to REGION_CD variable----
         WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OTHER",
                               DFO_REGION))
 
-#check if there may be overlap on land
+#check if there may be overlap on land----
       # Perform spatial join
         WS_coords <- st_join(WS_coords, Canada)
 
@@ -120,10 +120,14 @@ options(digits = 5)
                                  "check land"))
       
       
-      ### remove colons from "Time" field
+#remove colons from "Time" fields----
       WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
+      WS_coords$WS_TIME_UTC <- gsub(":", "", WS_coords$WS_TIME_UTC)
       
-      ### function to format various Date formats as an excel date number
+
+# Convert WS_DATE to Date object -----
+      
+### function to format various Date formats as an excel date number
       convert_to_excel_date <- Vectorize(function(date_string) {
         # Attempt to parse the date in different formats
         if (grepl("-", date_string)) {
@@ -146,11 +150,11 @@ options(digits = 5)
         return(excel_date_number)
       })
       
-      # Convert WS_DATE to Date object in R ()
+      # Run function to convert WS_DATE 
       WS_coords <- WS_coords %>% 
         mutate(WS_DATE_EXCEL = convert_to_excel_date(WS_DATE)) 
 
-      ##clean up df
+  #clean up df-----
       WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
         mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL) #keep WS_DATE in original format just in case
       
@@ -159,7 +163,7 @@ options(digits = 5)
         dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
 
-# output as .csv file
+# output as .csv file----
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
 write_csv(WS_coords1, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
 write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv.")))
