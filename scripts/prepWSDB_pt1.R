@@ -73,10 +73,12 @@ Canada<-read_sf("Y:/shapefiles/canada.shp") %>%
 # load input WS data---
 options(digits = 5)
     WS_data <- read_csv(here("input", input_file), col_types = cols(.default ="c"))%>%
-      mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,
+      mutate(LATITUDE = sapply(LATITUDE, convert_to_decimal_degrees), 
+             LONGITUDE = abs(sapply(LONGITUDE, convert_to_decimal_degrees))*-1,
              #apply function to clean coordinates and ensure LONGITUDE is negative, if long is POSTITIVE this will be wrong.
       SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
+    
 
 # check species, add common names and scientific names based on codes---
     SP_data <- read_csv(here("input", species), show_col_types = F)
@@ -122,7 +124,7 @@ options(digits = 5)
       
 # Convert WS_DATE to Date object -----
       
-### function to format various Date formats as an excel date number
+  ### function to format various Date formats as an excel date number
       convert_to_excel_date <- Vectorize(function(date_string) {
         # Attempt to parse the date in different formats
         if (grepl("-", date_string)) {
@@ -149,40 +151,57 @@ options(digits = 5)
       WS_coords <- WS_coords %>% 
         mutate(WS_DATE_EXCEL = convert_to_excel_date(WS_DATE)) 
       
-  
-  # #check region and correct UTC TIME----
-  #     # Create a function to adjust time based on region
-  #     adjust_to_utc <- function(time, region) {
-  #       # Define time zone offsets
-  #       offsets <- c("AR" = -3, "GULF" = -3, "MAR" = -3, "NL" = -2.5, "QC" = -4, "PAC" = -7, "O&P" = -5, "OTHER" = 0)
-  #       
-  #       # Adjust the time
-  #       adjusted_time <- time - hours(offsets[region])
-  #       
-  #       # Convert to UTC
-  #       # Note: This assumes the original time is in daylight savings time
-  #       adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
-  #       
-  #       return(adjusted_time)
-  #     }
-  #     
-  #     # Apply the function to create a new UTC_1 time variable
-  #     # Assuming your time column is named 'local_time' and region column is 'region'
-  #     WS_coords <- WS_coords %>% 
-  #       mutate(UTC_time = adjust_to_utc(ymd_hms(WS_TIME), REGION_CD))
+      # Convert Excel numeric date to R date (add days to the Excel start date)
+      start_date <- as.Date("1899-12-30")
+      WS_coords$Date <- start_date + WS_coords$WS_DATE_EXCEL
+      
+      # Combine Date and Time into a single POSIXct datetime object for both utc and local time fields
+      WS_coords = WS_coords%>%mutate(DateTime =case_when(!is.na(WS_TIME) ~ 
+                                                as.POSIXct(paste(WS_coords$Date, WS_coords$WS_TIME)), TRUE ~NA), 
+                                     DateTimeUTC = case_when(!is.na(WS_TIME_UTC)~
+                                                               as.POSIXct(paste(WS_coords$Date,WS_coords$WS_TIME_UTC)),
+                                                             TRUE ~NA ))
+      
+      
+  #check region and correct UTC TIME----
+      # Create a function to adjust time based on region
+      adjust_to_utc <- function(time, region) {
+        # Define time zone offsets
+        offsets <- c("AR" = -3, "GULF" = -3, "MAR" = -3, "NL" = -2.5, "QC" = -4, "PAC" = -7, "O&P" = -5, "OTHER" = 0)
+
+        # Adjust the time
+        adjusted_time <- time + hours(offsets[region])
+
+        # Convert to UTC
+        # Note: This assumes the original time is in daylight savings time
+        adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
+
+        return(adjusted_time)
+      }
+ 
+      # 
+      # Apply the function to DateTimeUTC if not NA to ensure time variable is in UTC based on local time
+      # Assuming your time column is named 'DateTime' and region column is 'REGION_CD'
+      WS_coords <- WS_coords %>%
+        mutate(DateTimeUTC = case_when(
+          is.na(DateTimeUTC) ~ adjust_to_utc(DateTime, REGION_CD),
+          TRUE ~ DateTimeUTC
+        ))
   #     
       #remove colons from "Time" fields----
-      WS_coords$WS_TIME <- gsub(":", "", WS_coords$WS_TIME)
-      WS_coords$WS_TIME_UTC <- gsub(":", "", WS_coords$WS_TIME_UTC)
+      WS_coords = WS_coords%>%mutate(WS_TIME = gsub(":", "", WS_TIME), 
+                                     WS_TIME_UTC = gsub(":", "", format(DateTimeUTC, "%H:%M")))
       
 
   #clean up df-----
       WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
-        mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL) #keep WS_DATE in original format just in case
+        mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL,
+               WS_DATE_UTC = as.character(DateTimeUTC)) #keep WS_DATE in original format just in case
       
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
-        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
+        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, Date,
+                         WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
 
 # output as .csv file----
