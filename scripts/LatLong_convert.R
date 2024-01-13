@@ -29,6 +29,10 @@ convert_to_decimal_degrees <- function(coord) {
   #remove any characters except numbers
   cleaned_coord <- gsub("[^-0-9. ]", "", coord)
  
+  # Correct instances of double decimal points
+  if (grepl("\\.{2,}", cleaned_coord)) {
+    cleaned_coord <- gsub("\\.{2,}", ".", cleaned_coord)
+  }
   
   # Split by space to get degrees, minutes, and seconds
   components <- unlist(strsplit(cleaned_coord, " "))
@@ -55,4 +59,19 @@ convert_to_decimal_degrees <- function(coord) {
     return(NA)
   }
 }
+
+# Function to troubleshoot and find the problematic latitude
+troubleshoot_latitudes <- function(latitudes) {
+  problems <- NULL
+  
+  for (i in seq_along(latitudes)) {
+    result <- convert_to_decimal_degrees(latitudes[i])
+    if (is.na(result)) {
+      problems <- c(problems, latitudes[i])
+    }
+  }
+  
+  return(problems)
+}
+
 

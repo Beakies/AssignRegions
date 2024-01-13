@@ -78,14 +78,23 @@ options(digits = 5)
              #apply function to clean coordinates and ensure LONGITUDE is negative, if long is POSTITIVE this will be wrong.
       SPECIES_CD = as.numeric(SPECIES_CD))%>%filter(!is.na(SPECIES_CD))
   
+    #if lat/long conversion doesnt work  this should help trouble shoot
+    WS_data1 =  read_csv(here("input", input_file), col_types = cols(.default ="c"))
+    probs = troubleshoot_latitudes(WS_data1$LATITUDE)
+    if (length(probs) == 0) {
+      cat("No problem Lats found.\n")
+    } else {
+      for (problem in probs) {
+        cat("Problem lat:", problem, "\n")
+      }
+    }
     
-
-# check species, add common names and scientific names based on codes---
+    # check species, add common names and scientific names based on codes---
     SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
     
     
-    #create shapefile based on coords----
+    #create WS_coords shapefile based on coords----
     
     WS_coords <- WS_data %>% mutate(ROWNUMBER = row_number())%>%  
       filter(!is.na(LATITUDE), !is.na(LONGITUDE))%>%select(ROWNUMBER, everything())
@@ -120,73 +129,48 @@ options(digits = 5)
       # Create a new column 'land' in the points object and assign the land codes
       WS_coords <- WS_coords%>%mutate(LAND = ifelse(is.na(REGION), "Ok",
                                  "check land"))
-      
+    
       
 # Convert WS_DATE to Date object -----
+      # Excel's origin date (December 30, 1899)
+      excel_origin <- as.Date("1899-12-30")
       
-  ### function to format various Date formats as an excel date number
-      convert_to_excel_date <- Vectorize(function(date_string) {
-        # Attempt to parse the date in different formats
-        if (grepl("-", date_string)) {
-          parsed_date <- dmy(date_string)
-        } else {
-          parsed_date <- mdy(date_string)
-        }
-        
-        # Handle cases where parsing fails
-        if (is.na(parsed_date)) {
-          stop("Date format not recognized")
-        }
-        
-        # Excel's origin date (December 30, 1899)
-        excel_origin <- as.Date("1899-12-30")
-        
-        # Calculate the difference in days
-        excel_date_number <- as.numeric(difftime(parsed_date, excel_origin, units = "days"))
-        
-        return(excel_date_number)
-      })
-      
-      # Run function to convert WS_DATE 
+      # Run function to clean up WS_DATE 
       WS_coords <- WS_coords %>% 
-        mutate(WS_DATE_EXCEL = convert_to_excel_date(WS_DATE)) 
+        mutate(Date_clean = convert_to_clean_date(WS_DATE),
+               WS_DATE_EXCEL = convert_to_xls_date(Date_clean)) 
       
-      # Convert Excel numeric date to R date (add days to the Excel start date)
-      start_date <- as.Date("1899-12-30")
-      WS_coords$Date <- start_date + WS_coords$WS_DATE_EXCEL
+      # Run function to clean up WS_TIME into standard 24:00 format
+      WS_coords = WS_coords%>%mutate(WS_TIME_UTC = sapply(WS_TIME_UTC, standardize_time), 
+                                     WS_TIME = sapply(WS_TIME, standardize_time))
+      
+      
+      # # Convert Excel numeric date to R date (add days to the Excel start date)
+      #  WS_coords$Date <- excel_origin + WS_coords$WS_DATE_EXCEL
       
       # Combine Date and Time into a single POSIXct datetime object for both utc and local time fields
       WS_coords = WS_coords%>%mutate(DateTime =case_when(!is.na(WS_TIME) ~ 
-                                                as.POSIXct(paste(WS_coords$Date, WS_coords$WS_TIME)), TRUE ~NA), 
+                                as.POSIXct(paste(WS_coords$Date_clean, WS_coords$WS_TIME),format = "%Y-%m-%d %H:%M", tz = "UTC"), TRUE ~NA), 
                                      DateTimeUTC = case_when(!is.na(WS_TIME_UTC)~
-                                                               as.POSIXct(paste(WS_coords$Date,WS_coords$WS_TIME_UTC)),
+                                                               as.POSIXct(paste(WS_coords$Date_clean,
+                                                                                WS_coords$WS_TIME_UTC), format = "%Y-%m-%d %H:%M", tz = "UTC"),
                                                              TRUE ~NA ))
       
       
   #check region and correct UTC TIME----
-      # Create a function to adjust time based on region
-      adjust_to_utc <- function(time, region) {
-        # Define time zone offsets
-        offsets <- c("AR" = -3, "GULF" = -3, "MAR" = -3, "NL" = -2.5, "QC" = -4, "PAC" = -7, "O&P" = -5, "OTHER" = 0)
-
-        # Adjust the time
-        adjusted_time <- time + hours(offsets[region])
-
-        # Convert to UTC
-        # Note: This assumes the original time is in daylight savings time
-        adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
-
-        return(adjusted_time)
-      }
- 
-      # 
+      
+      
       # Apply the function to DateTimeUTC if not NA to ensure time variable is in UTC based on local time
       # Assuming your time column is named 'DateTime' and region column is 'REGION_CD'
       WS_coords <- WS_coords %>%
-        mutate(DateTimeUTC = case_when(
-          is.na(DateTimeUTC) ~ adjust_to_utc(DateTime, REGION_CD),
-          TRUE ~ DateTimeUTC
-        ))
+        rowwise() %>%
+        mutate(
+            DateTimeUTC = case_when(
+              is.na(DateTimeUTC) & !is.na(DateTime) & !is.na(REGION_CD) ~ adjust_to_utc(DateTime, REGION_CD),
+              TRUE ~ DateTimeUTC
+            )
+        ) %>%
+        ungroup()
   #     
       #remove colons from "Time" fields----
       WS_coords = WS_coords%>%mutate(WS_TIME = gsub(":", "", WS_TIME), 
@@ -200,7 +184,7 @@ options(digits = 5)
       
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
-        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, Date,
+        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, 
                          WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
 
