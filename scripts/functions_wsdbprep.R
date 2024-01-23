@@ -68,7 +68,6 @@ troubleshoot_latitudes <- function(latitudes) {
 }
 
 
-#clean up hours field-----
 standardize_time <- function(time_string) {
   # Check if time_string is NA or empty
   if (is.na(time_string) || time_string == "") {
@@ -81,20 +80,31 @@ standardize_time <- function(time_string) {
   # Replace double or more colons with a single colon
   time_string <- gsub(":{2,}", ":", time_string)
   
-  # Extract hours and minutes parts
+  # Extract hours, minutes, and optionally seconds
   parts <- unlist(strsplit(time_string, ":"))
   
-  # Pad hours and minutes with leading zeros if necessary
-  if (length(parts) == 2) {
+  # Check for valid time parts and pad with leading zeros if necessary
+  if (length(parts) >= 2 && length(parts) <= 3) {
     hours <- sprintf("%02d", as.numeric(parts[1]))
-    minutes <- parts[2]
-    formatted_time <- paste(hours, minutes, sep = ":")
+    minutes <- sprintf("%02d", as.numeric(parts[2]))
+    
+    # Format time depending on whether seconds are present
+    if (length(parts) == 3) {
+      seconds <- sprintf("%02d", as.numeric(parts[3]))
+      formatted_time <- paste(hours, minutes, seconds, sep = ":")
+    } else {
+      formatted_time <- paste(hours, minutes, sep = ":")
+    }
+    
     return(formatted_time)
   }
   
-  # Handle cases where length is not 2 (e.g., missing colons, invalid format)
+  # Return NA for invalid formats
   return(NA)
 }
+
+
+
 
 
 #clean and format date to excel date #--------
@@ -162,3 +172,21 @@ if (!is.na(region) && region %in% names(offsets)) {
 return(adjusted_time)
 }
 
+adjust_to_local <- function(time, region) {
+  
+  # Define time zone offsets in minutes
+  offsets <- c("AR" = 3*60, "GULF" = 3*60, "MAR" = 3*60, "NL" = 2.5*60, 
+               "QC" = 4*60, "PAC" = 7*60, "O&P" = 5*60, "OTHER" = 0)
+  
+  # Adjust the time
+  if (!is.na(region) && region %in% names(offsets)) {
+    adjusted_time <- time + dminutes(offsets[region])
+    # Convert to UTC
+    adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
+  } else {
+    warning("Invalid or missing region code: ", region)
+    return(NA)
+  }
+  
+  return(adjusted_time)
+}

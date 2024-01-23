@@ -81,14 +81,7 @@ options(digits = 5)
     #if lat/long conversion doesnt work  this should help trouble shoot
     WS_data1 =  read_csv(here("input", input_file), col_types = cols(.default ="c"))
     probs = troubleshoot_latitudes(WS_data1$LATITUDE)
-    if (length(probs) == 0) {
-      cat("No problem Lats found.\n")
-    } else {
-      for (problem in probs) {
-        cat("Problem lat:", problem, "\n")
-      }
-    }
-    
+
     # check species, add common names and scientific names based on codes---
     SP_data <- read_csv(here("input", species), show_col_types = F)
     WS_data = left_join(WS_data, SP_data, by = "SPECIES_CD")
@@ -144,10 +137,8 @@ options(digits = 5)
       WS_coords = WS_coords%>%mutate(WS_TIME_UTC = sapply(WS_TIME_UTC, standardize_time), 
                                      WS_TIME = sapply(WS_TIME, standardize_time))
       
-      
-      # # Convert Excel numeric date to R date (add days to the Excel start date)
-      #  WS_coords$Date <- excel_origin + WS_coords$WS_DATE_EXCEL
-      
+    
+
       # Combine Date and Time into a single POSIXct datetime object for both utc and local time fields
       WS_coords = WS_coords%>%mutate(DateTime =case_when(!is.na(WS_TIME) ~ 
                                 as.POSIXct(paste(WS_coords$Date_clean, WS_coords$WS_TIME),format = "%Y-%m-%d %H:%M", tz = "UTC"), TRUE ~NA), 
@@ -155,7 +146,7 @@ options(digits = 5)
                                                                as.POSIXct(paste(WS_coords$Date_clean,
                                                                                 WS_coords$WS_TIME_UTC), format = "%Y-%m-%d %H:%M", tz = "UTC"),
                                                              TRUE ~NA ))
-      
+
       
   #check region and correct UTC TIME----
       
@@ -172,6 +163,20 @@ options(digits = 5)
         ) %>%
         ungroup()
   #     
+      
+      
+      #check if WS_TIME is NA and use UTC to back calculate the local time
+        WS_coords = WS_coords%>%
+          rowwise() %>%
+          mutate( DateTime = case_when(is.na(DateTime) & !is.na(DateTimeUTC) & !is.na(REGION_CD) 
+                                                             ~ adjust_to_local(DateTimeUTC, REGION_CD),
+                                        TRUE ~ DateTime
+        )
+        ) %>%mutate(WS_TIME = case_when(is.na(WS_TIME) ~ format(DateTime, "%H:%M")))%>%
+  ungroup()
+        
+        
+       
       #remove colons from "Time" fields----
       WS_coords = WS_coords%>%mutate(WS_TIME = gsub(":", "", WS_TIME), 
                                      WS_TIME_UTC = gsub(":", "", format(DateTimeUTC, "%H:%M")))
@@ -179,12 +184,12 @@ options(digits = 5)
 
   #clean up df-----
       WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
-        mutate(WS_DATE1 = WS_DATE, WS_DATE = WS_DATE_EXCEL,
+        mutate(WS_DATE_original = WS_DATE, WS_DATE = WS_DATE_EXCEL,
                WS_DATE_UTC = as.character(DateTimeUTC)) #keep WS_DATE in original format just in case
       
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
-        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, 
+        dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, WS_DATE_UTC,
                          WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
 

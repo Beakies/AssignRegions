@@ -22,7 +22,7 @@ The name of input files needs to be manually updated in this Rmarkdown script in
 ```{r input file, echo=T}
 
 # INPUTS NEED TO BE CSV files, file names are specified in quotations here:
-input_file <-"C&PValidatedEntry2023Test.csv"
+input_file <-"TC2023ValidatedEntry.csv"
 species = "speciesCodes.csv" 
 #source lat long conversion function
 source("scripts/functions_wsdbprep.R")
