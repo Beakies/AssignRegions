@@ -113,6 +113,21 @@ standardize_time <- function(time_string) {
 #clean and format date to excel date #--------
 ### format various Date formats 
 convert_to_clean_date <- function(date_strings) {
+  
+  # Function to extract the year from the filename
+  extract_year_from_filename <- function(filename) {
+    matches <- regmatches(filename, regexpr("[0-9]{4}", filename))
+    if (length(matches) > 0 && nchar(matches) == 4) {
+      return(matches)
+    } else {
+      return(NA) # Return NA if no four-digit number is found or if it's not the right length
+    }
+  }
+  
+  # Extract year from filename
+  file_year <- extract_year_from_filename(input_file)
+  
+  
   # Initialize an empty vector to store parsed dates
   parsed_dates <- vector("list", length(date_strings))
   
@@ -120,11 +135,17 @@ convert_to_clean_date <- function(date_strings) {
   for (i in seq_along(date_strings)) {
     date_string <- date_strings[i]
     
+    # Check for "day-month" format without the year e.g., 14-Sep
+    if (grepl("^[0-9]{1,2}-[A-Za-z]{3}$", date_string) && !is.na(file_year)) {
+      date_string <- paste(date_string, file_year, sep = "-")
+      parsed_dates[[i]] <- dmy(date_string)
+    }
+    
     # Check for "30-Dec-22" format
     if (grepl("-[A-Za-z]{3}-", date_string)) {
       parsed_dates[[i]] <- dmy(date_string, tz = NULL)
     }
-    # Check for "day-month-year" format
+    # Check for "day-month-year" numeric format
     else if (grepl("^[0-9]{1,2}-[0-9]{1,2}-", date_string)) {
       parsed_dates[[i]] <- dmy(date_string, tz = NULL)
     }
