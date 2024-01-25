@@ -144,7 +144,8 @@ options(digits = 5)
                                 as.POSIXct(paste(WS_coords$Date_clean, WS_coords$WS_TIME),format = "%Y-%m-%d %H:%M", tz = "UTC"), TRUE ~NA), 
                                      DateTimeUTC = case_when(!is.na(WS_TIME_UTC)~
                                                                as.POSIXct(paste(WS_coords$Date_clean,
-                                                                                WS_coords$WS_TIME_UTC), format = "%Y-%m-%d %H:%M", tz = "UTC"),
+                                                                                WS_coords$WS_TIME_UTC), 
+                                                                          format = "%Y-%m-%d %H:%M", tz = "UTC"),
                                                              TRUE ~NA ))
 
       
@@ -190,8 +191,11 @@ options(digits = 5)
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
         dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, WS_DATE_UTC,
-                         WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
+                         WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))%>%
+        mutate(WS_TIME_UTC = ifelse(UTC_adjust == "N", "",
+                                     WS_TIME_UTC))
 
+  
 
 # output as .csv file----
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]

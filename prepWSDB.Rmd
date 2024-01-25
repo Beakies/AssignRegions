@@ -26,6 +26,8 @@ input_file <-"TC2023ValidatedEntry.csv"
 species = "speciesCodes.csv" 
 #source lat long conversion function
 source("scripts/functions_wsdbprep.R")
+# correct UTC based on TZ?
+UTC_adjust = "Y" 
 
 ```
 2. The correct folder structure and file names:
