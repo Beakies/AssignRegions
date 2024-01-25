@@ -5,27 +5,30 @@
 #read in csv of data with Degrees Decimal Minute Lat/Long in the first 4 separate variables 
 
 convert_to_decimal_degrees <- function(coord) {
-  # Remove degree symbols and other unwanted characters
+  # Remove degree symbols and other unwanted characters such as cardinal directions
   coord <- iconv(coord, from = "latin1", to = "ASCII", sub = "")
-  
-  # Handle coordinates with 'd' for degrees and cardinal directions
+  coord <- gsub("°|'|[NSEW]", "", coord)
+    # Handle coordinates with 'd' for degrees 
   coord <- gsub("d", " ", coord)
-  coord <- gsub("[NW]", "", coord)
-  
-  # Insert a space between degrees and minutes if needed
-  if (grepl("^\\d{4,}", coord)) {
-    coord <- paste0(substr(coord, 1, 2), " ", substr(coord, 3, nchar(coord)))
-  }
-  # Trim leading and trailing spaces
   coord <- trimws(coord)
   
-  #remove any characters except numbers
+
+  # Insert a space between degrees and minutes if needed for concatenated formats
+  # Adjusting for coordinates that start with '0'
+  if (grepl("^0\\d{3,}", coord)) {
+    coord <- paste0(substr(coord, 1, 3), " ", substr(coord, 4, nchar(coord)))
+  } else if (grepl("^\\d{4,}", coord)) {
+    coord <- paste0(substr(coord, 1, 2), " ", substr(coord, 3, nchar(coord)))
+  }
+  
+  # Remove any characters except numbers, space, and decimal point
   cleaned_coord <- gsub("[^-0-9. ]", "", coord)
   
   # Correct instances of double decimal points
   if (grepl("\\.{2,}", cleaned_coord)) {
     cleaned_coord <- gsub("\\.{2,}", ".", cleaned_coord)
   }
+  
   
   # Split by space to get degrees, minutes, and seconds
   components <- unlist(strsplit(cleaned_coord, " "))

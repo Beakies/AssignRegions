@@ -22,12 +22,12 @@ The name of input files needs to be manually updated in this Rmarkdown script in
 ```{r input file, echo=T}
 
 # INPUTS NEED TO BE CSV files, file names are specified in quotations here:
-input_file <-"TC2023ValidatedEntry.csv"
+input_file <-"WhaleInsightC&PValidatedEntry2023.csv"
 species = "speciesCodes.csv" 
 #source lat long conversion function
 source("scripts/functions_wsdbprep.R")
 # correct UTC based on TZ?
-UTC_adjust = "Y" 
+UTC_adjust = "Y" #set to "N" if you dont want UTC conversion output
 
 ```
 2. The correct folder structure and file names:
