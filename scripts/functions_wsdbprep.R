@@ -180,8 +180,8 @@ convert_to_xls_date <- Vectorize(function(clean_date) {
 adjust_to_utc <- function(time, region) {
 
 # Define time zone offsets in minutes
-offsets <- c("AR" = -3*60, "GULF" = -3*60, "MAR" = -3*60, "NL" = -2.5*60, 
-             "QC" = -4*60, "PAC" = -7*60, "O&P" = -5*60, "OTHER" = 0)
+  offsets <- c("AR" = 3*60, "GULF" = 3*60, "MAR" = 3*60, "NL" = 2.5*60, 
+               "QC" = 4*60, "PAC" = 7*60, "O&P" = 5*60, "OTHER" = NA)
 
 # Adjust the time
 if (!is.na(region) && region %in% names(offsets)) {
@@ -200,11 +200,11 @@ adjust_to_local <- function(time, region) {
   
   # Define time zone offsets in minutes
   offsets <- c("AR" = 3*60, "GULF" = 3*60, "MAR" = 3*60, "NL" = 2.5*60, 
-               "QC" = 4*60, "PAC" = 7*60, "O&P" = 5*60, "OTHER" = 0)
+               "QC" = 4*60, "PAC" = 7*60, "O&P" = 5*60, "OTHER" = NA)
   
   # Adjust the time
   if (!is.na(region) && region %in% names(offsets)) {
-    adjusted_time <- time + dminutes(offsets[region])
+    adjusted_time <- time - dminutes(offsets[region])
     # Convert to UTC
     adjusted_time <- with_tz(adjusted_time, tzone = "UTC")
   } else {

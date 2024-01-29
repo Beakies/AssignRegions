@@ -111,8 +111,8 @@ options(digits = 5)
         
         #check if coords rounded to first decimal place ###NEED TO DO THIS###
  
-# Assign the region codes to REGION_CD variable----
-        WS_coords = WS_coords%>%mutate(REGION_CD = ifelse(is.na(DFO_REGION), "OTHER",
+# Assign the region codes to DFO_REGION variable----
+        WS_coords = WS_coords%>%mutate(DFO_REGION = ifelse(is.na(DFO_REGION), "OTHER",
                               DFO_REGION))
 
 #check if there may be overlap on land----
@@ -153,12 +153,12 @@ options(digits = 5)
       
       
       # Apply the function to DateTimeUTC if not NA to ensure time variable is in UTC based on local time
-      # Assuming your time column is named 'DateTime' and region column is 'REGION_CD'
+      # Assuming your time column is named 'DateTime' and region column is 'DFO_REGION'
       WS_coords <- WS_coords %>%
         rowwise() %>%
         mutate(
             DateTimeUTC = case_when(
-              is.na(DateTimeUTC) & !is.na(DateTime) & !is.na(REGION_CD) ~ adjust_to_utc(DateTime, REGION_CD),
+              is.na(DateTimeUTC) & !is.na(DateTime) & !is.na(DFO_REGION) ~ adjust_to_utc(DateTime, DFO_REGION),
               TRUE ~ DateTimeUTC
             )
         ) %>%
@@ -169,8 +169,8 @@ options(digits = 5)
       #check if WS_TIME is NA and use UTC to back calculate the local time
         WS_coords = WS_coords%>%
           rowwise() %>%
-          mutate( DateTime = case_when(is.na(DateTime) & !is.na(DateTimeUTC) & !is.na(REGION_CD) 
-                                                             ~ adjust_to_local(DateTimeUTC, REGION_CD),
+          mutate( DateTime = case_when(is.na(DateTime) & !is.na(DateTimeUTC) & !is.na(DFO_REGION) 
+                                                             ~ adjust_to_local(DateTimeUTC, DFO_REGION),
                                         TRUE ~ DateTime
         )
         ) %>%mutate(WS_TIME = case_when(is.na(WS_TIME) ~ format(DateTime, "%H:%M")))%>%
@@ -185,7 +185,7 @@ options(digits = 5)
 
   #clean up df-----
       WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
-        mutate(WS_DATE_original = WS_DATE, WS_DATE = WS_DATE_EXCEL,
+        mutate(WS_DATE_original = WS_DATE, WS_DATE = round(WS_DATE_EXCEL, 0),
                WS_DATE_UTC = as.character(DateTimeUTC)) #keep WS_DATE in original format just in case
       
       #remove the random shapefile fields
