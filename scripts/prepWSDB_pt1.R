@@ -192,8 +192,10 @@ options(digits = 5)
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
         dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, WS_DATE_UTC,
                          WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))%>%
-        mutate(WS_TIME_UTC = ifelse(UTC_adjust == "N", "",
-                                     WS_TIME_UTC))
+        mutate(WS_TIME_UTC = case_when(
+          UTC_adjust == "N" ~ "",  # Replace with "" when UTC_adjust is "N"
+          TRUE ~ WS_TIME_UTC       # Otherwise, keep WS_TIME_UTC as is
+        ))
 
   
 
