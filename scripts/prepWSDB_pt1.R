@@ -20,12 +20,12 @@
 
 # output: resulting .csv file with region codes
 
-# Y:\shapefiles: folder containing the following Y:\shapefiles:
+# "shapefiles" folder containing the following shapefiles:
 
-#   DFO Regions: these are based on  NAFO regions (2022) and manually edited based on Gulf/ QC input and to remove overlap with land,
+#   - DFO Regions: these are based on  NAFO regions (2022) and manually edited based on Gulf/ QC input and to remove overlap with land,
 #       snap edges together, etc.
 #   
-#   AC_1M: land area shapefile, sourced from National Atlas files on opengov.ca
+#   - Canada from AC_1M: land area shapefile, sourced from National Atlas files on opengov.ca - clipped to CANADA = POL_DIV
 
 
 # Region codes applied by this script:
@@ -63,10 +63,10 @@ sf_use_s2(FALSE)
 
 # load via mapped Y drive using OPP12 to find shapefiles
 # or if shapefiles folder is stored locally: "shapefiles/DFO_NAFO_EEZ_Land.shp"
-regions <-read_sf("Y:/shapefiles/DFO_NAFO_EEZ_Land.shp")
+regions <-read_sf("R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/shapefiles/DFO_regions/DFO_NAFO_EEZ_Land.shp")
 
 # load hi res land data (sourced from Open Gov Atlas, saved as shapefile)
-Canada<-read_sf("Y:/shapefiles/canada.shp") %>% 
+Canada<-read_sf("R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/shapefiles/coastline/canada/clipped/canada_simple.shp") %>% 
   st_transform(4326) %>% 
   transmute(REGION = "land", geometry)
 
