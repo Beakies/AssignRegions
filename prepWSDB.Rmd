@@ -27,7 +27,7 @@ species = "speciesCodes.csv"
 #source lat long conversion function
 source("scripts/functions_wsdbprep.R")
 # correct UTC based on TZ?
-UTC_adjust = "Y" #set to "N" if you dont want UTC conversion output
+UTC_adjust = "Y" #set to "N" if you dont want any time conversion output
 
 ```
 2. The correct folder structure and file names:
