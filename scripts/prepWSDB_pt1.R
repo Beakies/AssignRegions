@@ -141,7 +141,8 @@ options(digits = 5)
 
       # Combine Date and Time into a single POSIXct datetime object for both utc and local time fields
       WS_coords = WS_coords%>%mutate(DateTime =case_when(!is.na(WS_TIME) ~ 
-                                as.POSIXct(paste(WS_coords$Date_clean, WS_coords$WS_TIME),format = "%Y-%m-%d %H:%M", tz = "UTC"), TRUE ~NA), 
+                                as.POSIXct(paste(WS_coords$Date_clean, WS_coords$WS_TIME),
+                                           format = "%Y-%m-%d %H:%M", tz = "UTC"), TRUE ~NA), 
                                      DateTimeUTC = case_when(!is.na(WS_TIME_UTC)~
                                                                as.POSIXct(paste(WS_coords$Date_clean,
                                                                                 WS_coords$WS_TIME_UTC), 
@@ -150,14 +151,15 @@ options(digits = 5)
 
       
   #check region and correct UTC TIME----
-      
+      #only apply UTC correct when UTC_adjust == "Y"
       
       # Apply the function to DateTimeUTC if not NA to ensure time variable is in UTC based on local time
-      # Assuming your time column is named 'DateTime' and region column is 'DFO_REGION'
+      # Assuming time column is named 'DateTime' and region column is 'DFO_REGION'
+      # ONLY works if datetime is NOT NA and UTC is NA
       WS_coords <- WS_coords %>%
         rowwise() %>%
         mutate(
-            DateTimeUTC = case_when(
+            DateTimeUTC = case_when(UTC_adjust == "Y" &
               is.na(DateTimeUTC) & !is.na(DateTime) & !is.na(DFO_REGION) ~ adjust_to_utc(DateTime, DFO_REGION),
               TRUE ~ DateTimeUTC
             )
@@ -184,24 +186,22 @@ options(digits = 5)
       
 
   #clean up df-----
-      WS_coords = WS_coords%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, DFO_REGION, everything())%>%
+   
+        
+      WS_coords = WS_coords%>%mutate(REGION_CD = DFO_REGION)%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, REGION_CD, everything())%>%
         mutate(WS_DATE_original = WS_DATE, WS_DATE = round(WS_DATE_EXCEL, 0),
                WS_DATE_UTC = as.character(DateTimeUTC)) #keep WS_DATE in original format just in case
       
       #remove the random shapefile fields
       WS_coords1 = WS_coords%>%st_drop_geometry()%>%
         dplyr::select(-c(FID_DFO_NA,FID_DFO_Re,	Region_FR,	Region_EN,	DateTime, DateTimeUTC, WS_DATE_UTC,
-                         WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))%>%
-        mutate(WS_TIME_UTC = case_when(
-          UTC_adjust == "N" ~ "",  # Replace with "" when UTC_adjust is "N"
-          TRUE ~ WS_TIME_UTC       # Otherwise, keep WS_TIME_UTC as is
-        ))
+                         WS_DATE_EXCEL, Region_INU, Shape_Leng,	Shape_Le_1,	Shape_Area,	REGION))
 
   
 
 # output as .csv file----
 outfilename<-str_match(input_file, "(.*)\\..*$")[,2]
-write_csv(WS_coords1, here("output", paste0(outfilename, "-REGIONCODES.csv.")), na="")
-write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv.")))
-write_csv(overlap_Regions, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv.")), na="")
-write_csv(possible_Dups, here("output", paste0(outfilename, "-possible_Dups.csv.")), na="")
+write_csv(WS_coords1, here("output", paste0("BATCH_", outfilename, ".csv")), na="")
+write_csv(WS_NA_coords, here("output", paste0(outfilename, "-NA_COORDS.csv")))
+write_csv(overlap_Regions, here("output", paste0(outfilename, "-MULTIPLE_REGIONS.csv")), na="")
+write_csv(possible_Dups, here("output", paste0(outfilename, "-possible_Dups.csv")), na="")

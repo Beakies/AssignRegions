@@ -15,3 +15,4 @@ input/**
 input/TestData.xlsx
 input/TestData1.xlsx
 prepWSDB.html
+*.md

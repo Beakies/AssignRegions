@@ -70,6 +70,7 @@ troubleshoot_latitudes <- function(latitudes) {
   return(problems)
 }
 
+#checks for extra whitespace, double colons, no colons. Time in hh:mm and hh:mm:ss
 
 standardize_time <- function(time_string) {
   # Check if time_string is NA or empty
@@ -82,6 +83,13 @@ standardize_time <- function(time_string) {
   
   # Replace double or more colons with a single colon
   time_string <- gsub(":{2,}", ":", time_string)
+  
+  # Check if the format is without colons and has 3 or 4 digits (HHMM or HMM)
+  if (grepl("^[0-9]{3,4}$", time_string)) {
+    # Insert colon between hours and minutes, accommodating both HMM and HHMM formats
+    time_string <- sub("^(\\d{1,2})(\\d{2})$", "\\1:\\2", time_string)
+  }
+  
   
   # Extract hours, minutes, and optionally seconds
   parts <- unlist(strsplit(time_string, ":"))
