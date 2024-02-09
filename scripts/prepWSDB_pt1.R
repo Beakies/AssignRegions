@@ -109,7 +109,7 @@ options(digits = 5)
         possible_Dups = WS_coords[duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")] ) |
                                   duplicated(WS_coords[c("LATITUDE","LONGITUDE", "WS_DATE","WS_TIME", "SPECIES_CD")], fromLast = T), ]
         
-        #check if coords rounded to first decimal place ###NEED TO DO THIS###
+        #check if coords rounded to first decimal place ARE A DUPLICATE ###NEED TO DO THIS###
  
 # Assign the region codes to DFO_REGION variable----
         WS_coords = WS_coords%>%mutate(DFO_REGION = ifelse(is.na(DFO_REGION), "OTHER",
@@ -150,7 +150,7 @@ options(digits = 5)
                                                              TRUE ~NA ))
 
       
-  #check region and correct UTC TIME----
+  #correct UTC TIME----
       #only apply UTC correct when UTC_adjust == "Y"
       
       # Apply the function to DateTimeUTC if not NA to ensure time variable is in UTC based on local time
@@ -171,11 +171,11 @@ options(digits = 5)
       #check if WS_TIME is NA and use UTC to back calculate the local time
         WS_coords = WS_coords%>%
           rowwise() %>%
-          mutate( DateTime = case_when(is.na(DateTime) & !is.na(DateTimeUTC) & !is.na(DFO_REGION) 
+          mutate( DateTime = case_when(UTC_adjust == "Y" & is.na(DateTime) & !is.na(DateTimeUTC) & !is.na(DFO_REGION) 
                                                              ~ adjust_to_local(DateTimeUTC, DFO_REGION),
                                         TRUE ~ DateTime
         )
-        ) %>%mutate(WS_TIME = case_when(is.na(WS_TIME) ~ format(DateTime, "%H:%M")))%>%
+        ) %>%mutate(WS_TIME = case_when(is.na(WS_TIME) ~ format(DateTime, "%H:%M"), TRUE ~ WS_TIME))%>%
   ungroup()
         
         
@@ -188,7 +188,8 @@ options(digits = 5)
   #clean up df-----
    
         
-      WS_coords = WS_coords%>%mutate(REGION_CD = DFO_REGION)%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, REGION_CD, everything())%>%
+      WS_coords = WS_coords%>%mutate(REGION_CD = DFO_REGION)%>%dplyr::select(ROWNUMBER, LAND, LATITUDE, LONGITUDE, 
+                                                                             REGION_CD, everything())%>%
         mutate(WS_DATE_original = WS_DATE, WS_DATE = round(WS_DATE_EXCEL, 0),
                WS_DATE_UTC = as.character(DateTimeUTC)) #keep WS_DATE in original format just in case
       
