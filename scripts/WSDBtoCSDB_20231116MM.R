@@ -4,95 +4,75 @@
 
 # Download and install packages if not already installed: 
 
-if (!require("writexl")) install.packages("writexl")
-if (!require("readxl")) install.packages("readxl")
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("lubridate")) install.packages("lubridate")
-if (!require("here")) install.packages("here")
-if (!require("dplyr")) install.packages("dplyr")
-if (!require("tidyr")) install.packages("tidyr")
-
-# Then open the packages
-
-library(writexl)
-library(tidyverse)
-library(lubridate)
-library(here)
-library(dplyr)
-library(tidyr)
+pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here, dplyr, tidyr)
 
 # Load test data sheet 
 
-file_path <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Yearly data exports.xlsx)" 
-year <- "2020"
-my_data <- read_excel(file_path, sheet = year)
+file_path <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
+WSDB_data <- read_csv(file_path)
+
+# Read data tables
+Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Species code table.csv)"
+Species_code_table <- read_csv(Species_code_table)
+
+# CREATE NEW data frame called CSDB_data with correct column names (run this by Joy)
 
 # Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
+# HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the meeting? Also do I want to create just this new column in CSDB_data df, to keep things clear?
 
-my_data <- my_data %>%
-  mutate(Year = ifelse(is.null(my_data$UTC_Year),my_data$UTC_Year, my_data$Reported_Year),
-         Month = ifelse(is.null(my_data$UTC_Month),my_data$UTC_Month, my_data$Reported_Month),
-         Day = ifelse(is.null(my_data$UTC_Day),my_data$UTC_Day, my_data$Reported_Day))
+CSDB_data <- WSDB_data %>%
+  mutate(Year = ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
+         Month = ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
+         Day = ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))
 
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
 
-# Rename Regional_Primary_Key from WSDB "WS_EVENT_ID"
-
-WS_EVENT_ID <- my_data$Regional_Primary_Key
-
-list(WS_EVENT_ID)
-
 # Modify Regional_Primary_Key
+
 # First 2 digits are "11" representing MAR Region
 
 string1 <- 11
 
 # Add 9 digits to string1 (totaling 11 digits)
+# FIGURE OUT HOW TO MODIFY THIS TO WORK WITH VARYING NUMBERS OF DIGITS
 
-string2 <- sprintf("%09d", WS_EVENT_ID)
-Regional_Primary_Key = paste(string1,string2, sep= "")
+string2 <- sprintf("%09d", WSDB_data$WS_EVENT_ID)
+CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
 
 # Verify Regional_Primary_Key is in the correct format (first 2 digits are "11" and the total number of digits is 11)
-
-print(Regional_Primary_Key) 
-
-# Include the modified Regional_Primary_Key in the data frame
-
-my_data$Regional_Primary_Key <- Regional_Primary_Key
+#print(Regional_Primary_Key) 
 
 # 2) Change the format of UTC_Time and Reported_Time to hh:mm:ss
+# CHANGE TO WS_TIME AND WS_TIME_UTC
 
-suppressWarnings(my_data <- my_data %>%
-  mutate(UTC_Time = sprintf("%04d", UTC_Time),
-         UTC_Time = parse_date_time(UTC_Time, orders= "HM"),
-         UTC_Time = format(UTC_Time, format = "%H:%M:%S")))
+suppressWarnings(CSDB_data <- WSDB_data %>%
+                   mutate(UTC_Time = sprintf("%04d", UTC_Time),
+                          UTC_Time = parse_date_time(UTC_Time, orders= "HM"),
+                          UTC_Time = format(UTC_Time, format = "%H:%M:%S")))
 
-suppressWarnings(my_data <- my_data %>%
-  mutate(Reported_Time = sprintf("%04d", Reported_Time),
-         Reported_Time = parse_date_time(Reported_Time,orders= "HM"),
-         Reported_Time = format(Reported_Time, format = "%H:%M:%S")))
+suppressWarnings(CSDB_data <- WSDB_data %>%
+                   mutate(Reported_Time = sprintf("%04d", Reported_Time),
+                          Reported_Time = parse_date_time(Reported_Time,orders= "HM"),
+                          Reported_Time = format(Reported_Time, format = "%H:%M:%S")))
 
 # 3) Map LCQUECODES_CD to Location_Uncertainty_Code
+# COLLAPSE TABLE TO JUST INCLUDE CHANGES (i.e. remove 3 ~ 3, keep 4 ~ 3)
 
-LCQECODE_CD <- my_data$Location_Uncertainty_Code
-list(LCQECODE_CD)
-
-my_data <- my_data %>%
-mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 1 ~ 1, 
-                                             LCQECODE_CD == 2 ~ 2, 
-                                             LCQECODE_CD == 3 ~ 3, 
-                                             LCQECODE_CD == 4 ~ 3, 
-                                             LCQECODE_CD == 5 ~ 3, 
-                                             LCQECODE_CD == 6 ~ 3, 
-                                             LCQECODE_CD == 7 ~ 3,
-                                             is.na(LCQECODE_CD) ~ 0,
-                                             TRUE ~ as.numeric(LCQECODE_CD)))
+CSDB_data <- mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 1 ~ 1, 
+                                                          LCQECODE_CD == 2 ~ 2, 
+                                                          LCQECODE_CD == 3 ~ 3, 
+                                                          LCQECODE_CD == 4 ~ 3, 
+                                                          LCQECODE_CD == 5 ~ 3, 
+                                                          LCQECODE_CD == 6 ~ 3, 
+                                                          LCQECODE_CD == 7 ~ 3,
+                                                          is.na(LCQECODE_CD) ~ 0,
+                                                          TRUE ~ as.numeric(LCQECODE_CD)))
 
 # 4) Map LCQECODE_CD to Location_Uncertainty_Reason_Code
 
-my_data <- my_data %>%
-mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1, 
+CSDB_data <- WSDB_data %>%
+  mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1, 
                                                       LCQECODE_CD == 4 ~ 2, 
                                                       LCQECODE_CD == 5 ~ 3, 
                                                       LCQECODE_CD == 6 ~ 4, 
@@ -102,95 +82,16 @@ mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1,
                                                       LCQECODE_CD == 2 ~ NA_real_,
                                                       TRUE ~ as.numeric(LCQECODE_CD)))
 
-# 5) Map COMMONNAME to ITIS_Code
-my_data <- my_data %>%
-  mutate(ITIS_Code = case_when(COMMONNAME == "DOLPHIN-ATLANTIC BOTTLENOSE" ~ "180426", 
-                               COMMONNAME == "DOLPHIN-STRIPED" ~ "180434", 
-                               COMMONNAME == "DOLPHIN-COMMON" ~ "180438", 
-                               COMMONNAME == "DOLPHIN-FRASER'S" ~ "180440", 
-                               COMMONNAME == "DOLPHIN-WHITE-BEAKED" ~ "180442", 
-                               COMMONNAME == "DOLPHIN-ATLANTIC WHITE-SIDED" ~ "180443", 
-                               COMMONNAME == "DOLPHIN-RISSO'S" ~ "180457", 
-                               COMMONNAME == "FALSE KILLER WHALE" ~ "180463", 
-                               COMMONNAME == "WHALE-KILLER" ~ "180469", 
-                               COMMONNAME == "PORPOISE-HARBOUR" ~ "180473", 
-                               COMMONNAME == "WHALE-BELUGA" ~ "180483", 
-                               COMMONNAME == "WHALE-NARWHAL" ~ "180485", 
-                               COMMONNAME == "WHALE-SPERM" ~ "180489", 
-                               COMMONNAME == "PYGMY SPERM WHALE" ~ "180491", 
-                               COMMONNAME == "Dwarf sperm whale" ~ "180492", 
-                               COMMONNAME == "WHALE- CUVIER'S BEAKED" ~ "180498", 
-                               COMMONNAME == "WHALE-NORTHERN BOTTLENOSE" ~ "180504", 
-                               COMMONNAME == "WHALE-TRUES BEAKED" ~ "180508", 
-                               COMMONNAME == "Gervais' beaked whale" ~ "180509", 
-                               COMMONNAME == "WHALE-SOWERBY'S BEAKED" ~ "180515", 
-                               COMMONNAME == "WHALE-BLAINVILLE'S BEAKED" ~ "180517", 
-                               COMMONNAME == "WHALE-MINKE" ~ "180524", 
-                               COMMONNAME == "WHALE-SEI" ~ "180526", 
-                               COMMONNAME == "WHALE-FIN" ~ "180527", 
-                               COMMONNAME == "WHALE-BLUE" ~ "180528", 
-                               COMMONNAME == "WHALE-HUMPBACK" ~ "180530", 
-                               COMMONNAME == "WHALE-BOWHEAD" ~ "180533", 
-                               COMMONNAME == "WHALE-NORTH ATLANTIC RIGHT" ~ "180537", 
-                               COMMONNAME == "DOLPHIN- ATLANTIC SPOTTED" ~ "552460", 
-                               COMMONNAME == "WHALE-LONG-FINNED PILOT" ~ "552461", 
-                               COMMONNAME == "WHALE-FIN/SEI" ~ NA_character_, 
-                               COMMONNAME == "CETACEAN (NS)" ~ NA_character_, 
-                               COMMONNAME == "WHALE-BALEEN (NS)" ~ NA_character_,
-                               COMMONNAME == "WHALE-BEAKED (NS)" ~ NA_character_, 
-                               COMMONNAME == "Unidentified dolphin" ~ NA_character_, 
-                               COMMONNAME == "DOLPHINS/PORPOISE (NS)" ~ NA_character_, 
-                               COMMONNAME == "Unidentified kogia" ~ NA_character_, 
-                               COMMONNAME == "WHALE-MESOPLODONT (NS)" ~ NA_character_,
-                               COMMONNAME == "WHALES (NS)" ~ NA_character_)) 
+# 5) Map COMMONNAME to ITIS_Code using table
+CSDB_data$COMMONNAME = left_join(COMMONNAME, Species_Code_table, by = COMMONNAME)
 
-# 6) Map COMMONNAME to Species_Code
-my_data <- my_data %>%
-  mutate(Species_Code = case_when(COMMONNAME == "DOLPHIN-ATLANTIC BOTTLENOSE" ~ "BNDO", 
-                                  COMMONNAME == "DOLPHIN-STRIPED" ~ "STDO", 
-                                  COMMONNAME == "DOLPHIN-COMMON" ~ "SADO", 
-                                  COMMONNAME == "DOLPHIN-FRASER'S" ~ "FRDO", 
-                                  COMMONNAME == "DOLPHIN-WHITE-BEAKED" ~ "WBDO", 
-                                  COMMONNAME == "DOLPHIN-ATLANTIC WHITE-SIDED" ~ "AWDO", 
-                                  COMMONNAME == "DOLPHIN-RISSO'S" ~ "GRAM", 
-                                  COMMONNAME == "FALSE KILLER WHALE" ~ "FKWH", 
-                                  COMMONNAME == "WHALE-KILLER" ~ "KIWH", 
-                                  COMMONNAME == "PORPOISE-HARBOUR" ~ "HAPO", 
-                                  COMMONNAME == "WHALE-BELUGA" ~ "BELU", 
-                                  COMMONNAME == "WHALE-NARWHAL" ~ "NRWH", 
-                                  COMMONNAME == "WHALE-SPERM" ~ "SPWH", 
-                                  COMMONNAME == "PYGMY SPERM WHALE" ~ "PSWH", 
-                                  COMMONNAME == "Dwarf sperm whale" ~ "DSWH", 
-                                  COMMONNAME == "WHALE- CUVIER'S BEAKED" ~ "CUBW", 
-                                  COMMONNAME == "WHALE-NORTHERN BOTTLENOSE" ~ "NBWH", 
-                                  COMMONNAME == "WHALE-TRUES BEAKED" ~ "TRBW", 
-                                  COMMONNAME == "Gervais' beaked whale" ~ "GEBW", 
-                                  COMMONNAME == "WHALE-SOWERBY'S BEAKED" ~ "SBWH", 
-                                  COMMONNAME == "WHALE-BLAINVILLE'S BEAKED" ~ "BLBW", 
-                                  COMMONNAME == "WHALE-MINKE" ~ "MIWH", 
-                                  COMMONNAME == "WHALE-SEI" ~ "SEWH", 
-                                  COMMONNAME == "WHALE-FIN" ~ "FIWH", 
-                                  COMMONNAME == "WHALE-BLUE" ~ "BLWH", 
-                                  COMMONNAME == "WHALE-HUMPBACK" ~ "HUWH", 
-                                  COMMONNAME == "WHALE-BOWHEAD" ~ "BOWH", 
-                                  COMMONNAME == "WHALE-NORTH ATLANTIC RIGHT" ~ "NARW", 
-                                  COMMONNAME == "DOLPHIN-ATLANTIC SPOTTED" ~ "ASDO", 
-                                  COMMONNAME == "WHALE-LONG-FINNED PILOT" ~ "LFPW", 
-                                  COMMONNAME == "WHALE-FIN/SEI" ~ "SEFI", 
-                                  COMMONNAME == "CETACEAN (NS)" ~ "UNKN", 
-                                  COMMONNAME == "WHALES (NS)" ~ "UNKN",
-                                  COMMONNAME == "WHALE-BALEEN (NS)" ~ "UNBA", 
-                                  COMMONNAME == "WHALE-BEAKED (NS)" ~ "UNBW", 
-                                  COMMONNAME == "Unidentified dolphin" ~ "UNDO", 
-                                  COMMONNAME == "DOLPHINS/PORPOISE (NS)" ~ "UNDP", 
-                                  COMMONNAME == "Unidentified kogia" ~ "UNKO", 
-                                  COMMONNAME == "WHALE-MESOPLODONT (NS)" ~ "UNMP",)) 
+# 6) Map COMMONNAME to Species_Code using table
+
 
 # 7) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
+# COLLAPSE TABLE TO JUST INCLUDE CHANGES (i.e. remove 3 ~ 3, keep 9 ~ 0)
 
-IDREL_CD <- my_data$SpeciesID_Uncertainty_Code
-
-my_data <- my_data %>%
+CSDB_data <- WSDB_data %>%
   mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 1 ~ 1, 
                                                 IDREL_CD == 2 ~ 2, 
                                                 IDREL_CD == 3 ~ 3,
@@ -200,33 +101,33 @@ my_data <- my_data %>%
 
 # 8) Map Count_Uncertainty_Code (put 0’s in for null)
 
-my_data <- my_data %>%
+CSDB_data <- WSDB_data %>%
   mutate(Count_Uncertainty_Code = coalesce(Count_Uncertainty_Code, 0))
 
 # 9) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
 
 # Remove 'NOT RECORDED' from concatenated BEHAVIOUR_CDs
 
-my_data["BEHAVIOUR_DESC"][my_data["BEHAVIOUR_DESC"] == "NOT RECORDED"] <- NA
-my_data["BEHAVIOUR_DESC_1"][my_data["BEHAVIOUR_DESC_1"] == "NOT RECORDED"] <- NA
-my_data["BEHAVIOUR_DESC_2"][my_data["BEHAVIOUR_DESC_2"] == "NOT RECORDED"] <- NA
-my_data["BEHAVIOUR_DESC_3"][my_data["BEHAVIOUR_DESC_3"] == "NOT RECORDED"] <- NA
-my_data["BEHAVIOUR_DESC_4"][my_data["BEHAVIOUR_DESC_4"] == "NOT RECORDED"] <- NA
+WSDB_data["BEHAVIOUR_DESC"][WSDB_data["BEHAVIOUR_DESC"] == "NOT RECORDED"] <- NA
+WSDB_data["BEHAVIOUR_DESC_1"][WSDB_data["BEHAVIOUR_DESC_1"] == "NOT RECORDED"] <- NA
+WSDB_data["BEHAVIOUR_DESC_2"][WSDB_data["BEHAVIOUR_DESC_2"] == "NOT RECORDED"] <- NA
+WSDB_data["BEHAVIOUR_DESC_3"][WSDB_data["BEHAVIOUR_DESC_3"] == "NOT RECORDED"] <- NA
+WSDB_data["BEHAVIOUR_DESC_4"][WSDB_data["BEHAVIOUR_DESC_4"] == "NOT RECORDED"] <- NA
 
 # Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
 
-my_data <- my_data %>%
+CSDB_data <- WSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
 
 # Reorder columns (note that COMMONNAME and BEHAVIOUR_DESC columns get removed)
 
-my_data <- my_data[, c("Regional_Primary_Key", "Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-                       "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-                       "Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
+#CSDB_data <- WSDB_data[, c("Regional_Primary_Key", "Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
+"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 10) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
 
-my_data <- my_data %>%
+CSDB_data <- WSDB_data %>%
   mutate(Animal_Status_Code = case_when(GEARIMPACT_CD == 9 ~ 0,
                                         GEARIMPACT_CD == 5 | Behaviour_Comments == "VISIBLE INJURY"| Behaviour_Comments == "STRUCK BY VESSEL" ~ 2,
                                         GEARIMPACT_CD == 1 | GEARIMPACT_CD == 2 | Behaviour_Comments == "TANGLED IN FISHING GEAR"| Behaviour_Comments == "DISENTANGLED RELEASED ALIVE" ~ 3,
@@ -235,20 +136,22 @@ my_data <- my_data %>%
                                         TRUE ~ as.numeric(GEARIMPACT_CD)))
 
 # 11) Remove record if GEARIMPACT_CD = 3
+# THIS WILL BE DONE AT THE QUERY LEVEL INSTEAD
 
-my_data <- my_data %>%
-  filter(!grepl(3, GEARIMPACT_CD))
+# CSDB_data <- WSDB_data %>%
+# filter(!grepl(3, GEARIMPACT_CD))
 
-my_data <- my_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-                       "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-                       "Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
+#CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
+"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 12) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
-my_data <- my_data %>%
+CSDB_data <- WSDB_data %>%
   mutate(Reported_SeaState = sprintf(Reported_SeaState, fmt = '%.1f'))
 
 # 13) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
+# COLLAPSE TABLE TO JUST INCLUDE CHANGES (i.e. remove 3.0 ~ 3.0 keep 13.0 ~ NA)
 
 my_data<- my_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '1.0' ~ '1.0',
@@ -267,6 +170,7 @@ my_data<- my_data %>%
                                        TRUE ~ as.character(Reported_SeaState)))
 
 # 14) Map Platform_Type_Code
+# COLLAPSE TABLE TO JUST INCLUDE CHANGES (i.e. remove 3 ~ 3, keep 4 ~ 3)
 
 PLATFORM_TYPE_CD <- my_data$Platform_Type_Code
 
@@ -470,4 +374,3 @@ output_file = paste0("CSDB ", year, " created ", today, ".xlsx")
 write_xlsx(my_data, here("Output", output_file))
 
 view(my_data)
-
