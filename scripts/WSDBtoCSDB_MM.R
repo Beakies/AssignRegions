@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # M. Murphy February 16th, 2024
+=======
+# M. Murphy March 15th, 2023
+>>>>>>> e3e4d42d201140ad0037b95d32b63ee644ca0761
 
 # This code is used to format data from WSDB into the form required for CSDB
 
@@ -59,7 +63,14 @@ suppressWarnings(CSDB_data <- WSDB_data %>%
 # 3) Map LCQUECODES_CD to Location_Uncertainty_Code
 # COLLAPSE TABLE TO JUST INCLUDE CHANGES (i.e. remove 3 ~ 3, keep 4 ~ 3)
 
+<<<<<<< HEAD
 CSDB_data <- mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
+=======
+CSDB_data <- mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 1 ~ 1, 
+                                                          LCQECODE_CD == 2 ~ 2, 
+                                                          LCQECODE_CD == 3 ~ 3, 
+                                                          LCQECODE_CD == 4 ~ 3, 
+>>>>>>> e3e4d42d201140ad0037b95d32b63ee644ca0761
                                                           LCQECODE_CD == 5 ~ 3, 
                                                           LCQECODE_CD == 6 ~ 3, 
                                                           LCQECODE_CD == 7 ~ 3,
