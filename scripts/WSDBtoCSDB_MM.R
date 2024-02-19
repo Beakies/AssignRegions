@@ -27,13 +27,15 @@ Data_source_code_table <- read_csv(Data_source_code_table)
 
 # CREATE NEW data frame called CSDB_data with correct column names (run this by Joy)
 
+
 # Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
 # HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the meeting? Also do I want to create just this new column in CSDB_data df, to keep things clear?
 
 CSDB_data <- WSDB_data %>%
   mutate(Year = ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
          Month = ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
-         Day = ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))
+         Day = ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))%>%
+  dplyr::select(Year, Month, Day)
 
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
