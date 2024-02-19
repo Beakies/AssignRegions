@@ -24,7 +24,7 @@ Effort_code_table <- read_csv(Effort_code_table)
 Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Data source code table.csv)"
 Data_source_code_table <- read_csv(Data_source_code_table)
 
-# CREATE NEW data frame called CSDB_data with correct column names (run this by Joy)
+# CREATE NEW data frame called CSDB_data with correct column names (run this by Joy/Laura)
 
 # Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
 # HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the meeting? Also do I want to create just this new column in CSDB_data df, to keep things clear?
