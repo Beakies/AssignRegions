@@ -1,6 +1,4 @@
 # M. Murphy February 16th, 2024
-
-#test x2
 # This code is used to format data from WSDB into the form required for CSDB
 
 # Download and install packages if not already installed: 
@@ -29,9 +27,9 @@ Data_source_code_table <- read_csv(Data_source_code_table)
 # HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the previous meeting?
 
 CSDB_data <- WSDB_data %>%
-  mutate(Year = ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
-         Month = ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
-         Day = ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))%>%
+  mutate(Year= ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
+         Month= ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
+         Day= ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))%>%
   dplyr::select(Year, Month, Day)
 
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
@@ -44,7 +42,6 @@ CSDB_data <- WSDB_data %>%
 string1 <- 11
 
 # Add 9 digits to string1 (totaling 11 digits)
-# FIGURE OUT HOW TO MODIFY THIS TO WORK WITH VARYING NUMBERS OF DIGITS
 
 string2 <- sprintf("%09d", WSDB_data$WS_EVENT_ID)
 CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
@@ -53,17 +50,19 @@ CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
 #print(Regional_Primary_Key) 
 
 # 2) Change the format of UTC_Time and Reported_Time to hh:mm:ss
-# CHANGE TO WS_TIME AND WS_TIME_UTC
+# ISSUES WITH DPLYR SELECT
 
-suppressWarnings(CSDB_data <- WSDB_data %>%
-                   mutate(UTC_Time = sprintf("%04d", UTC_Time),
-                          UTC_Time = parse_date_time(UTC_Time, orders= "HM"),
-                          UTC_Time = format(UTC_Time, format = "%H:%M:%S")))
+CSDB_data <- WSDB_data %>%
+  mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
+         UTC_Time = parse_date_time(WS_TIME_UTC, orders= "HM"),
+         UTC_Time = format(WS_TIME_UTC, format = "%H:%M:%S"))%>%
+  dplyr::select(Regional_Primary_Key, UTC_Time)
 
-suppressWarnings(CSDB_data <- WSDB_data %>%
-                   mutate(Reported_Time = sprintf("%04d", Reported_Time),
-                          Reported_Time = parse_date_time(Reported_Time,orders= "HM"),
-                          Reported_Time = format(Reported_Time, format = "%H:%M:%S")))
+CSDB_data <- WSDB_data %>%
+  mutate(Reported_Time = sprintf("%04d", WS_TIME),
+         Reported_Time = parse_date_time(WS_TIME,orders= "HM"),
+         Reported_Time = format(WS_TIME, format = "%H:%M:%S"))%>%
+  dplyr::select(Year, Month, Day, Regional_Primary_Key, UTC_Time, Reported_Time)
 
 # 3) Map LCQUECODES_CD to Location_Uncertainty_Code
 
