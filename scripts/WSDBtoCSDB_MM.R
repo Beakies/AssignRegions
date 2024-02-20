@@ -36,22 +36,11 @@ CSDB_data <- WSDB_data %>%
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
 
-# Modify Regional_Primary_Key
-
-# First 2 digits are "11" representing MAR Region
-
 string1 <- 11
-
-# Add 9 digits to string1 (totaling 11 digits)
-
 string2 <- sprintf("%09d", WSDB_data$WS_EVENT_ID)
 CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
 
-# Verify Regional_Primary_Key is in the correct format (first 2 digits are "11" and the total number of digits is 11)
-#print(Regional_Primary_Key) 
-
 # 2) Change the format of UTC_Time and Reported_Time to hh:mm:ss
-# ISSUES WITH DPLYR SELECT
 
 CSDB_data <- CSDB_data %>%
   mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
@@ -65,12 +54,13 @@ CSDB_data <- CSDB_data %>%
 
 # 3) Map LCQUECODES_CD to Location_Uncertainty_Code
 
-CSDB_data <- mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
-                                                          LCQECODE_CD == 5 ~ 3, 
-                                                          LCQECODE_CD == 6 ~ 3, 
-                                                          LCQECODE_CD == 7 ~ 3,
-                                                          is.na(LCQECODE_CD) ~ 0,
-                                                          TRUE ~ as.numeric(LCQECODE_CD)))
+CSDB_data <- CSDB_data %>%
+  mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
+                                               LCQECODE_CD == 5 ~ 3, 
+                                               LCQECODE_CD == 6 ~ 3, 
+                                               LCQECODE_CD == 7 ~ 3,
+                                               is.na(LCQECODE_CD) ~ 0,
+                                               TRUE ~ as.numeric(LCQECODE_CD)))
 
 # 4) Map LCQECODE_CD to Location_Uncertainty_Reason_Code
 
@@ -154,8 +144,8 @@ CSDB_data <- WSDB_data %>%
 # Reorder columns (note that COMMONNAME and BEHAVIOUR_DESC columns get removed)
 
 #CSDB_data <- WSDB_data[, c("Regional_Primary_Key", "Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
+#"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+#"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 10) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
 
@@ -174,51 +164,51 @@ CSDB_data <- WSDB_data %>%
 # filter(!grepl(3, GEARIMPACT_CD))
 
 #CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
+#"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+#"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 12) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = sprintf(Reported_SeaState, fmt = '%.1f'))
 
 # 13) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
 
-my_data<- my_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
                                        TRUE ~ as.character(Reported_SeaState)))
 
 # 14) Map Platform_Type_Code
 
-PLATFORM_TYPE_CD <- my_data$Platform_Type_Code
+PLATFORM_TYPE_CD <- CSDB_data$Platform_Type_Code
 
-my_data <- my_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Platform_Type_Code = case_when(PLATFORM_TYPE_CD == 4 ~ 0,
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
 # 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
 
 # Reorder columns so would it be easier to do this just once?
-CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
+CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
                        "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
                        "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 19) Format Latitude and Longitude to four decimal places
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Latitude = sprintf(Latitude, fmt = '%.4f'))
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Longitude = sprintf(Longitude, fmt = '%.4f'))
 
 # 20) Remove commas from Comments and Behaviour_Comments
 
-CSDB_data$Comments <- gsub(",","",WSDB_data$Comments)
+CSDB_data$Comments <- gsub(",","",CSDB_data$Comments)
 
 CSDB_data$Behaviour_Comments <- gsub(",","",WSDB_data$Behaviour_Comments)
 
