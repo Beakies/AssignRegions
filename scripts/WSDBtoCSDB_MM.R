@@ -26,10 +26,12 @@ Data_source_code_table <- read_csv(Data_source_code_table)
 # Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
 # HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the previous meeting?
 
+# START CSDB----
 CSDB_data <- WSDB_data %>%
   mutate(Year= ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
          Month= ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
          Day= ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))
+#####
 
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
@@ -83,41 +85,71 @@ CSDB_data <- CSDB_data %>%
                                                       LCQECODE_CD == 2 ~ NA_real_,
                                                       TRUE ~ as.numeric(LCQECODE_CD)))
 
-# 5 and 6) Map COMMONNAME to ITIS_Code and Species_code using Species_code_table
-# IS IT OK TO DO THIS IN ONE STEP
+# 5 and 6) Map COMMONNAME to ITIS_Code and Species_code using Species_code_table----
+CSDB_data <- CSDB_data %>%
+  left_join(Species_code_table, by = "COMMONNAME")
+
+# 15) Map TRIPTYPE_CD to Activity_Type_Code using Trip_type_table
+
+CSDB_data <- CSDB_data %>% 
+  left_join(Activity_type_code_table, by = "TRIPTYPE_CD")
+
+# 16) Map Effort using Effort_code_table
 
 CSDB_data <- CSDB_data %>%
-  left_join(CSDB_data, Species_code_table, by = "COMMONNAME")
+  left_join(Effort_code_table, by = "DATA_TYPE_CD")
+
+CSDB_data <- CSDB_data %>%
+  mutate(DATA_TYPE_CD =  case_when(is.na(DATA_TYPE_CD) ~ 0,
+         TRUE ~ as.numeric(DATA_TYPE_CD)))
+
+# 17) Map Data_Source_Code using Data_source_table (note that this is ordered by CSDB code)
+
+CSDB_data <- CSDB_data %>% 
+  left_join(Data_source_code_table, by = "DATASOURCE_CD")
+
+CSDB_data <- CSDB_data %>%
+  mutate(Data_Source_Code = case_when(is.na(DATASOURCE_CD) ~ 0,
+                                  TRUE ~ as.numeric(DATASOURCE_CD)))
 
 # 7) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
 
 CSDB_data <- CSDB_data %>%
-  mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 1 ~ 1, 
-                                                IDREL_CD == 2 ~ 2, 
-                                                IDREL_CD == 3 ~ 3,
-                                                IDREL_CD == 9 ~ 0,
+  mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 9 ~ 0,
                                                 is.na(IDREL_CD) ~ 0,
                                                 TRUE ~ as.numeric(IDREL_CD)))
 
 # 8) Map Count_Uncertainty_Code (put 0’s in for null)
 
 CSDB_data <- CSDB_data %>%
-  mutate(Count_Uncertainty_Code = coalesce(Count_Uncertainty_Code, 0))
+  mutate(Count_Uncertainty_Code = coalesce(COUNT_UNCERTAINTY_CD, 0))
 
 # 9) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
 
-# Remove 'NOT RECORDED' from concatenated BEHAVIOUR_CDs
+#might be useful instead of unite
+#%>%rowwise() %>%  # Apply operations row by row
+#  mutate(
+#    input_count = sum(c_across(27:32) == "Y", na.rm = TRUE))
 
-WSDB_data["BEHAVIOUR_DESC"][WSDB_data["BEHAVIOUR_DESC"] == "NOT RECORDED"] <- NA
-WSDB_data["BEHAVIOUR_DESC_1"][WSDB_data["BEHAVIOUR_DESC_1"] == "NOT RECORDED"] <- NA
-WSDB_data["BEHAVIOUR_DESC_2"][WSDB_data["BEHAVIOUR_DESC_2"] == "NOT RECORDED"] <- NA
-WSDB_data["BEHAVIOUR_DESC_3"][WSDB_data["BEHAVIOUR_DESC_3"] == "NOT RECORDED"] <- NA
-WSDB_data["BEHAVIOUR_DESC_4"][WSDB_data["BEHAVIOUR_DESC_4"] == "NOT RECORDED"] <- NA
+# Remove 'NOT RECORDED' from concatenated BEHAVIOUR_CDs
+CSDB_data = CSDB_data %>%
+  mutate(BEHAVIOUR_DESC = case_when(BEHAVIOUR_DESC == "NOT RECORDED" ~ NA,
+                                    .default = BEHAVIOUR_DESC),
+         BEHAVIOUR_DESC_1 = case_when(BEHAVIOUR_DESC_1 == "NOT RECORDED" ~ NA,
+                                      .default = BEHAVIOUR_DESC),
+         BEHAVIOUR_DESC_2 = case_when(BEHAVIOUR_DESC_2 == "NOT RECORDED" ~ NA,
+                                      .default = BEHAVIOUR_DESC),
+         BEHAVIOUR_DESC_3 = case_when(BEHAVIOUR_DESC_3 == "NOT RECORDED" ~ NA,
+                                      .default = BEHAVIOUR_DESC),
+         BEHAVIOUR_DESC_4 = case_when(BEHAVIOUR_DESC_4 == "NOT RECORDED" ~ NA,
+                                      .default = BEHAVIOUR_DESC))
 
 # Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
 
 CSDB_data <- WSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
+
+# Revisit trimming blank space in Behaviour_Comments
 
 # Reorder columns (note that COMMONNAME and BEHAVIOUR_DESC columns get removed)
 
@@ -164,26 +196,6 @@ my_data <- my_data %>%
   mutate(Platform_Type_Code = case_when(PLATFORM_TYPE_CD == 4 ~ 0,
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
-
-# 15) Map TRIPTYPE_CD to Activity_Type_Code using Trip_type_table
-
-CSDB_data %>% left_join(Trip_type_table, CSDB_data, by = "TRIPTYPE_CD")
-
-# 16) Map Effort using Effort_code_table
-
-CSDB_data %>% left_join(Effort_code_table, CSDB_data, by = "DATA_TYPE_CD")
-
-CSDB_data <- WSDB_data %>%
-  mutate(is.na(DATA_TYPE_CD) ~ 0,
-        TRUE ~ as.numeric(DATA_TYPE_CD))
-
-# 17) Map Data_Source_Code using Data_source_table (note that this is ordered by CSDB code)
-
-CSDB_data %>% left_join(Data_source_code_table, CSDB_data, by = "DATASOURCE_CD")
-
-CSDB_data <- WSDB_data %>%
-  mutate(Data_Source_Code = case_when(is.na(DATASOURCE_CD) ~ 0,
-                                      TRUE ~ as.numeric(DATASOURCE_CD)))
 
 # 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
 
