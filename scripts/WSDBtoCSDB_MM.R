@@ -23,24 +23,24 @@ Effort_code_table <- read_csv(Effort_code_table)
 Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Data source code table.csv)"
 Data_source_code_table <- read_csv(Data_source_code_table)
 
-# Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
+# START CSDB----
+# 1) Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
 # HAVING TROUBLE WITH THIS SYNTAX, what was the fix we did in the previous meeting?
 
-# START CSDB----
 CSDB_data <- WSDB_data %>%
   mutate(Year= ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
          Month= ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
          Day= ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))
-#####
 
-# 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
+# 2) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
+# COLLAPSE INTO ONE LINE
 
 string1 <- 11
 string2 <- sprintf("%09d", WSDB_data$WS_EVENT_ID)
 CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
 
-# 2) Change the format of UTC_Time and Reported_Time to hh:mm:ss
+# 3) Change the format of UTC_Time and Reported_Time to hh:mm:ss
 
 CSDB_data <- CSDB_data %>%
   mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
@@ -52,7 +52,7 @@ CSDB_data <- CSDB_data %>%
          Reported_Time = parse_date_time(WS_TIME,orders= "HM"),
          Reported_Time = format(WS_TIME, format = "%H:%M:%S"))
 
-# 3) Map LCQUECODES_CD to Location_Uncertainty_Code
+# 4) Map LCQUECODES_CD to Location_Uncertainty_Code. Note: unchanged LCQECODES 
 
 CSDB_data <- CSDB_data %>%
   mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
@@ -62,7 +62,7 @@ CSDB_data <- CSDB_data %>%
                                                is.na(LCQECODE_CD) ~ 0,
                                                TRUE ~ as.numeric(LCQECODE_CD)))
 
-# 4) Map LCQECODE_CD to Location_Uncertainty_Reason_Code
+# 5) Map LCQECODE_CD to Location_Uncertainty_Reason_Code.
 
 CSDB_data <- CSDB_data %>%
   mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1, 
@@ -75,16 +75,16 @@ CSDB_data <- CSDB_data %>%
                                                       LCQECODE_CD == 2 ~ NA_real_,
                                                       TRUE ~ as.numeric(LCQECODE_CD)))
 
-# 5 and 6) Map COMMONNAME to ITIS_Code and Species_code using Species_code_table----
+# 6) Map COMMONNAME to ITIS_Code and Species_code using Species_code_table----
 CSDB_data <- CSDB_data %>%
   left_join(Species_code_table, by = "COMMONNAME")
 
-# 15) Map TRIPTYPE_CD to Activity_Type_Code using Trip_type_table
+# 7) Map TRIPTYPE_CD to Activity_Type_Code using Trip_type_table
 
 CSDB_data <- CSDB_data %>% 
   left_join(Activity_type_code_table, by = "TRIPTYPE_CD")
 
-# 16) Map Effort using Effort_code_table
+# 8) Map Effort using Effort_code_table
 
 CSDB_data <- CSDB_data %>%
   left_join(Effort_code_table, by = "DATA_TYPE_CD")
@@ -93,7 +93,7 @@ CSDB_data <- CSDB_data %>%
   mutate(DATA_TYPE_CD =  case_when(is.na(DATA_TYPE_CD) ~ 0,
          TRUE ~ as.numeric(DATA_TYPE_CD)))
 
-# 17) Map Data_Source_Code using Data_source_table (note that this is ordered by CSDB code)
+# 9) Map Data_Source_Code using Data_source_table (note that this is ordered by CSDB code)
 
 CSDB_data <- CSDB_data %>% 
   left_join(Data_source_code_table, by = "DATASOURCE_CD")
@@ -102,26 +102,26 @@ CSDB_data <- CSDB_data %>%
   mutate(Data_Source_Code = case_when(is.na(DATASOURCE_CD) ~ 0,
                                   TRUE ~ as.numeric(DATASOURCE_CD)))
 
-# 7) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
+# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
 
 CSDB_data <- CSDB_data %>%
   mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 9 ~ 0,
                                                 is.na(IDREL_CD) ~ 0,
                                                 TRUE ~ as.numeric(IDREL_CD)))
 
-# 8) Map Count_Uncertainty_Code (put 0’s in for null)
+# 11) Map Count_Uncertainty_Code (put 0’s in for null)
 
 CSDB_data <- CSDB_data %>%
   mutate(Count_Uncertainty_Code = coalesce(COUNT_UNCERTAINTY_CD, 0))
 
-# 9) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
+# 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
 
 #might be useful instead of unite
 #%>%rowwise() %>%  # Apply operations row by row
 #  mutate(
 #    input_count = sum(c_across(27:32) == "Y", na.rm = TRUE))
 
-# Remove 'NOT RECORDED' from concatenated BEHAVIOUR_CDs
+# 12a) Remove 'NOT RECORDED' from concatenated BEHAVIOUR_CDs
 CSDB_data = CSDB_data %>%
   mutate(BEHAVIOUR_DESC = case_when(BEHAVIOUR_DESC == "NOT RECORDED" ~ NA,
                                     .default = BEHAVIOUR_DESC),
@@ -134,7 +134,7 @@ CSDB_data = CSDB_data %>%
          BEHAVIOUR_DESC_4 = case_when(BEHAVIOUR_DESC_4 == "NOT RECORDED" ~ NA,
                                       .default = BEHAVIOUR_DESC))
 
-# Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
+# 12b) Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
 
 CSDB_data <- WSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
@@ -147,7 +147,7 @@ CSDB_data <- WSDB_data %>%
 #"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
 #"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
-# 10) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
+# 13) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
 
 CSDB_data <- WSDB_data %>%
   mutate(Animal_Status_Code = case_when(GEARIMPACT_CD == 9 ~ 0,
@@ -157,7 +157,7 @@ CSDB_data <- WSDB_data %>%
                                         is.na(GEARIMPACT_CD) ~ 0,
                                         TRUE ~ as.numeric(GEARIMPACT_CD)))
 
-# 11) Remove record if GEARIMPACT_CD = 3
+# 14) Remove record if GEARIMPACT_CD = 3
 # THIS WILL BE DONE AT THE QUERY LEVEL INSTEAD
 
 # CSDB_data <- WSDB_data %>%
@@ -167,18 +167,18 @@ CSDB_data <- WSDB_data %>%
 #"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
 #"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
-# 12) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
+# 15) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = sprintf(Reported_SeaState, fmt = '%.1f'))
 
-# 13) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
+# 16) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
                                        TRUE ~ as.character(Reported_SeaState)))
 
-# 14) Map Platform_Type_Code
+# 17) Map Platform_Type_Code
 
 PLATFORM_TYPE_CD <- CSDB_data$Platform_Type_Code
 
@@ -192,11 +192,6 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
-
-# Reorder columns so would it be easier to do this just once?
-CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-                       "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-                       "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 19) Format Latitude and Longitude to four decimal places
 
@@ -212,7 +207,11 @@ CSDB_data$Comments <- gsub(",","",CSDB_data$Comments)
 
 CSDB_data$Behaviour_Comments <- gsub(",","",WSDB_data$Behaviour_Comments)
 
-# dplyr select
+# dplyr select only the columns needed for CSDB data and ordered correctly
+# Reorder columns
+CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
+                           "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+                           "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 21) Export as .xlsx including today's date
 
