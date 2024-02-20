@@ -3,7 +3,7 @@
 
 # Download and install packages if not already installed: 
 
-pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here, dplyr, tidyr)
+pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here)
 
 # Load test data sheet 
 
@@ -29,8 +29,7 @@ Data_source_code_table <- read_csv(Data_source_code_table)
 CSDB_data <- WSDB_data %>%
   mutate(Year= ifelse(is.null(UTC_Year),Reported_Year, UTC_Year),
          Month= ifelse(is.null(UTC_Month),Reported_Month, UTC_Month),
-         Day= ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))%>%
-  dplyr::select(Year, Month, Day)
+         Day= ifelse(is.null(UTC_Day),Reported_Day, Reported_Day))
 
 # 1) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
@@ -52,17 +51,15 @@ CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
 # 2) Change the format of UTC_Time and Reported_Time to hh:mm:ss
 # ISSUES WITH DPLYR SELECT
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
          UTC_Time = parse_date_time(WS_TIME_UTC, orders= "HM"),
-         UTC_Time = format(WS_TIME_UTC, format = "%H:%M:%S"))%>%
-  dplyr::select(Regional_Primary_Key, UTC_Time)
+         UTC_Time = format(WS_TIME_UTC, format = "%H:%M:%S"))
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Reported_Time = sprintf("%04d", WS_TIME),
          Reported_Time = parse_date_time(WS_TIME,orders= "HM"),
-         Reported_Time = format(WS_TIME, format = "%H:%M:%S"))%>%
-  dplyr::select(Year, Month, Day, Regional_Primary_Key, UTC_Time, Reported_Time)
+         Reported_Time = format(WS_TIME, format = "%H:%M:%S"))
 
 # 3) Map LCQUECODES_CD to Location_Uncertainty_Code
 
@@ -75,7 +72,7 @@ CSDB_data <- mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3,
 
 # 4) Map LCQECODE_CD to Location_Uncertainty_Reason_Code
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1, 
                                                       LCQECODE_CD == 4 ~ 2, 
                                                       LCQECODE_CD == 5 ~ 3, 
@@ -89,11 +86,12 @@ CSDB_data <- WSDB_data %>%
 # 5 and 6) Map COMMONNAME to ITIS_Code and Species_code using Species_code_table
 # IS IT OK TO DO THIS IN ONE STEP
 
-CSDB_data %>% left_join(Species_code_table, CSDB_data, by = "COMMONNAME")
+CSDB_data <- CSDB_data %>%
+  left_join(CSDB_data, Species_code_table, by = "COMMONNAME")
 
 # 7) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 1 ~ 1, 
                                                 IDREL_CD == 2 ~ 2, 
                                                 IDREL_CD == 3 ~ 3,
@@ -103,7 +101,7 @@ CSDB_data <- WSDB_data %>%
 
 # 8) Map Count_Uncertainty_Code (put 0’s in for null)
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Count_Uncertainty_Code = coalesce(Count_Uncertainty_Code, 0))
 
 # 9) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
@@ -211,6 +209,8 @@ CSDB_data <- WSDB_data %>%
 CSDB_data$Comments <- gsub(",","",WSDB_data$Comments)
 
 CSDB_data$Behaviour_Comments <- gsub(",","",WSDB_data$Behaviour_Comments)
+
+# dplyr select
 
 # 21) Export as .xlsx including today's date
 
