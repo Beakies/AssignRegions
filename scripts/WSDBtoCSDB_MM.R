@@ -147,25 +147,25 @@ CSDB_data <- CSDB_data %>%
                                         is.na(GEARIMPACT_CD) ~ 0,
                                         TRUE ~ as.numeric(GEARIMPACT_CD)))
 
-# 15) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
+# 14) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = sprintf(BEAUFORT_CD, fmt = '%.1f'))
 
-# 16) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
+# 15) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
                                        TRUE ~ as.character(Reported_SeaState)))
 
-# 17) Map Platform_Type_Code
+# 16) Map Platform_Type_Code
 
 CSDB_data <- CSDB_data %>%
   mutate(Platform_Type_Code = case_when(PLATFORM_TYPE_CD == 4 ~ 0,
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
-# 18) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason. 
+# 17) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason. 
 # Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
 
 CSDB_data$Suspected_Data_Issue_Reason = CSDB_data$SUSPECTED_DATA_ISSUE
@@ -174,7 +174,7 @@ CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
 
-# 19) Format Latitude and Longitude to four decimal places
+# 18) Format Latitude and Longitude to four decimal places
 
 CSDB_data <- CSDB_data %>%
   mutate(Latitude = sprintf(LATITUDE, fmt = '%.4f'))
@@ -182,13 +182,13 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>%
   mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f'))
 
-# 20) Remove commas from Comments and Behaviour_Comments
+# 19) Remove commas from Comments and Behaviour_Comments
 
 CSDB_data$COMMENTS <- gsub(",","",CSDB_data$COMMENTS)
 
 CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
-# dplyr select only the columns needed for CSDB data and ordered correctly
+# 20) dplyr select only the columns needed for CSDB data and ordered correctly
 # Reorder columns
 
 CSDB_data <- CSDB_data %>%
@@ -196,9 +196,9 @@ CSDB_data <- CSDB_data %>%
                 Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
                 Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Comments)
 
-CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-                           "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-                           "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
+# CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
+#                           "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+#                           "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 21) Export as .xlsx including today's date
 # Error in paste0("CSDB ", year, " created ", today, ".xlsx") : 
