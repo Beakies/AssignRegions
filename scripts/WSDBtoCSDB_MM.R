@@ -34,11 +34,8 @@ CSDB_data <- WSDB_data %>%
 
 # 2) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
-# COLLAPSE INTO ONE LINE
 
-string1 <- 11
-string2 <- sprintf("%09d", WSDB_data$WS_EVENT_ID)
-CSDB_data$Regional_Primary_Key = paste(string1,string2, sep= "")
+CSDB_data$Regional_Primary_Key = paste(11,sprintf("%09d", WSDB_data$WS_EVENT_ID), sep= "")
 
 # 3) Change the format of UTC_Time and Reported_Time to hh:mm:ss
 
@@ -203,9 +200,9 @@ CSDB_data <- CSDB_data %>%
 
 # 20) Remove commas from Comments and Behaviour_Comments
 
-CSDB_data$Comments <- gsub(",","",CSDB_data$Comments)
+CSDB_data$COMMENTS <- gsub(",","",CSDB_data$COMMENTS)
 
-CSDB_data$Behaviour_Comments <- gsub(",","",WSDB_data$Behaviour_Comments)
+CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
 # dplyr select only the columns needed for CSDB data and ordered correctly
 # Reorder columns
