@@ -132,11 +132,10 @@ CSDB_data = CSDB_data %>%
                                       .default = BEHAVIOUR_DESC))
 
 # 12b) Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
+# MAYBE REVISIT TRIMMING BLANKS IF THERE IS AN ISSUE
 
 CSDB_data <- WSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
-
-# Revisit trimming blank space in Behaviour_Comments
 
 # Reorder columns (note that COMMONNAME and BEHAVIOUR_DESC columns get removed)
 
@@ -146,7 +145,7 @@ CSDB_data <- WSDB_data %>%
 
 # 13) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Animal_Status_Code = case_when(GEARIMPACT_CD == 9 ~ 0,
                                         GEARIMPACT_CD == 5 | Behaviour_Comments == "VISIBLE INJURY"| Behaviour_Comments == "STRUCK BY VESSEL" ~ 2,
                                         GEARIMPACT_CD == 1 | GEARIMPACT_CD == 2 | Behaviour_Comments == "TANGLED IN FISHING GEAR"| Behaviour_Comments == "DISENTANGLED RELEASED ALIVE" ~ 3,
@@ -167,7 +166,7 @@ CSDB_data <- WSDB_data %>%
 # 15) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
 CSDB_data <- CSDB_data %>%
-  mutate(Reported_SeaState = sprintf(Reported_SeaState, fmt = '%.1f'))
+  mutate(Reported_SeaState = sprintf(BEAUFORT_CD, fmt = '%.1f'))
 
 # 16) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
 
@@ -177,14 +176,13 @@ CSDB_data <- CSDB_data %>%
 
 # 17) Map Platform_Type_Code
 
-PLATFORM_TYPE_CD <- CSDB_data$Platform_Type_Code
-
 CSDB_data <- CSDB_data %>%
   mutate(Platform_Type_Code = case_when(PLATFORM_TYPE_CD == 4 ~ 0,
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
 # 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
+# SOMETHING CHANGED HERE AT THE QUERY LEVEL -- CHECK WITH AMANDA
 
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
