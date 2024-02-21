@@ -137,12 +137,6 @@ CSDB_data = CSDB_data %>%
 CSDB_data <- WSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
 
-# Reorder columns (note that COMMONNAME and BEHAVIOUR_DESC columns get removed)
-
-#CSDB_data <- WSDB_data[, c("Regional_Primary_Key", "Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-#"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Behaviour_Comments", "GEARIMPACT_CD", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-#"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
-
 # 13) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
 
 CSDB_data <- CSDB_data %>%
@@ -159,8 +153,9 @@ CSDB_data <- CSDB_data %>%
 # CSDB_data <- WSDB_data %>%
 # filter(!grepl(3, GEARIMPACT_CD))
 
-#CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-#"Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
+#CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", 
+#"Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments","Reported_Count", "Min_Count", "Max_Count", 
+#"Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
 #"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 15) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
@@ -183,6 +178,9 @@ CSDB_data <- CSDB_data %>%
 
 # 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
 # SOMETHING CHANGED HERE AT THE QUERY LEVEL -- CHECK WITH AMANDA
+#change WSDB SUSPECTED DATA ISSUE to Suspected_Data_Issue_Reason
+
+CSDB_data$Suspected_Data_Issue_Reason = CSDB_data$SUSPECTED_DATA_ISSUE
 
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
@@ -204,6 +202,12 @@ CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
 # dplyr select only the columns needed for CSDB data and ordered correctly
 # Reorder columns
+
+CSDB_data <- CSDB_data %>%
+  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitutde, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
+                Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
+                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Comments)
+
 CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
                            "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
                            "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
