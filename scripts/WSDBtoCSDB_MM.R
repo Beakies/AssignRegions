@@ -147,17 +147,6 @@ CSDB_data <- CSDB_data %>%
                                         is.na(GEARIMPACT_CD) ~ 0,
                                         TRUE ~ as.numeric(GEARIMPACT_CD)))
 
-# 14) Remove record if GEARIMPACT_CD = 3
-# THIS WILL BE DONE AT THE QUERY LEVEL INSTEAD
-
-# CSDB_data <- WSDB_data %>%
-# filter(!grepl(3, GEARIMPACT_CD))
-
-#CSDB_data <- WSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", 
-#"Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments","Reported_Count", "Min_Count", "Max_Count", 
-#"Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-#"Data_Source_Code", "Suspected_Data_Issue_Reason", "Comments")]
-
 # 15) Add one decimal place to Reported_SeaState (always zero, #.0), **REMOVE NA's
 
 CSDB_data <- CSDB_data %>%
@@ -176,9 +165,8 @@ CSDB_data <- CSDB_data %>%
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
-# 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
-# SOMETHING CHANGED HERE AT THE QUERY LEVEL -- CHECK WITH AMANDA
-#change WSDB SUSPECTED DATA ISSUE to Suspected_Data_Issue_Reason
+# 18) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason. 
+# Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null. 
 
 CSDB_data$Suspected_Data_Issue_Reason = CSDB_data$SUSPECTED_DATA_ISSUE
 
@@ -189,10 +177,10 @@ CSDB_data <- CSDB_data %>%
 # 19) Format Latitude and Longitude to four decimal places
 
 CSDB_data <- CSDB_data %>%
-  mutate(Latitude = sprintf(Latitude, fmt = '%.4f'))
+  mutate(Latitude = sprintf(LATITUDE, fmt = '%.4f'))
 
 CSDB_data <- CSDB_data %>%
-  mutate(Longitude = sprintf(Longitude, fmt = '%.4f'))
+  mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f'))
 
 # 20) Remove commas from Comments and Behaviour_Comments
 
@@ -213,6 +201,8 @@ CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_T
                            "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
 
 # 21) Export as .xlsx including today's date
+# Error in paste0("CSDB ", year, " created ", today, ".xlsx") : 
+#cannot coerce type 'closure' to vector of type 'character'
 
 today <- Sys.Date()
 
