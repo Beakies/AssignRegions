@@ -34,21 +34,23 @@ CSDB_data <- WSDB_data %>%
 # 2) Modify Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID).
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
 
-CSDB_data$Regional_Primary_Key = paste(11,sprintf("%09d", WSDB_data$WS_EVENT_ID), sep= "")
+CSDB_data <- CSDB_data %>%
+  mutate(Regional_Primary_Key = paste(11, sprintf("%09d", WS_EVENT_ID), sep= ""))
 
 # 3) Change the format of UTC_Time and Reported_Time to hh:mm:ss
 
 CSDB_data <- CSDB_data %>%
   mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
-         UTC_Time = parse_date_time(WS_TIME_UTC, orders= "HM"),
-         UTC_Time = format(WS_TIME_UTC, format = "%H:%M:%S"))
+         UTC_Time = parse_date_time(UTC_Time, orders= "HM"),
+         UTC_Time = format(UTC_Time, format = "%H:%M:%S"))
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_Time = sprintf("%04d", WS_TIME),
-         Reported_Time = parse_date_time(WS_TIME,orders= "HM"),
-         Reported_Time = format(WS_TIME, format = "%H:%M:%S"))
+         Reported_Time = parse_date_time(Reported_Time,orders= "HM"),
+         Reported_Time = format(Reported_Time, format = "%H:%M:%S"))
 
-# 4) Map LCQUECODES_CD to Location_Uncertainty_Code. Note: unchanged LCQECODES 
+# 4) Map LCQUECODES_CD to Location_Uncertainty_Code. Note: Location_Uncertainty_Codes that are identical to LCQECODES remain unchanged. 
+# example: LCQECODE = 1, Location_Uncertainty_Code = 1.
 
 CSDB_data <- CSDB_data %>%
   mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
@@ -98,7 +100,8 @@ CSDB_data <- CSDB_data %>%
   mutate(Data_Source_Code = case_when(is.na(DATASOURCE_CD) ~ 0,
                                   TRUE ~ as.numeric(DATASOURCE_CD)))
 
-# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null) 
+# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null). Note: IDREL_CDs that are identical to SpeciesID_Uncertainty_Codes remain unchanged. 
+# example: IDREL_CD = 1, SpeciesID_Uncertainty_Code = 1.
 
 CSDB_data <- CSDB_data %>%
   mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 9 ~ 0,
@@ -131,9 +134,9 @@ CSDB_data = CSDB_data %>%
                                       .default = BEHAVIOUR_DESC))
 
 # 12b) Concatenate five BEHAVIOUR_DESC columns separated by hyphens, removing NA's
-# MAYBE REVISIT TRIMMING BLANKS IF THERE IS AN ISSUE
+# THIS STEP SEEMS TO BE REMOVING COLUMNS
 
-CSDB_data <- WSDB_data %>%
+CSDB_data <- CSDB_data %>%
   unite('Behaviour_Comments', c('BEHAVIOUR_DESC','BEHAVIOUR_DESC_1','BEHAVIOUR_DESC_2','BEHAVIOUR_DESC_3','BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
 
 # 13) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
@@ -155,6 +158,7 @@ CSDB_data <- CSDB_data %>%
 
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
+                                       Reported_SeaState == 'NA' ~ NA_character_,
                                        TRUE ~ as.character(Reported_SeaState)))
 
 # 16) Map Platform_Type_Code
@@ -183,29 +187,31 @@ CSDB_data <- CSDB_data %>%
 
 # 19) Remove commas from Comments and Behaviour_Comments
 
-CSDB_data$COMMENTS <- gsub(",","",CSDB_data$COMMENTS)
+CSDB_data$Comments <- gsub(",","",CSDB_data$COMMENTS)
 
 CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
-# 20) dplyr select only the columns needed for CSDB data and ordered correctly
-# Reorder columns
+# 20) change names for a few more columns
+
+CSDB_data$Species_Comments = CSDB_data$FEATURE_DESC
+CSDB_data$Reported_Count = CSDB_data$BEST_COUNT
+CSDB_data$Min_Count = CSDB_data$MIN_COUNT
+CSDB_data$Max_Count = CSDB_data$MAX_COUNT
+CSDB_data$Distance = CSDB_data$DISTANCE
+
+# 20) dplyr select only the columns needed for CSDB data in the desired order.
+# MISSING EFFORT - WHERE IS IT COMING FROM OR DO I NOT NEED?
 
 CSDB_data <- CSDB_data %>%
-  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitutde, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
+  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
                 Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
-                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Comments)
-
-# CSDB_data <- CSDB_data[, c("Regional_Primary_Key","Year", "Month", "Day", "UTC_Time", "Reported_Time", "Latitude", "Longitude", "Location_Uncertainty_Code", "Location_Uncertainty_Reason_Code", "Species_Code", "ITIS_Code", "SpeciesID_Uncertainty_Code", "Species_Comments",
-#                           "Reported_Count", "Min_Count", "Max_Count", "Count_Uncertainty_Code", "Animal_Status_Code", "Behaviour_Comments", "Distance", "Reported_SeaState", "Platform_Type_Code", "Activity_Type_Code", "Effort", 
-#                           "Data_Source_Code", "Suspected_Data_Issue", "Suspected_Data_Issue_Reason", "Comments")]
+                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
 
 # 21) Export as .xlsx including today's date
-# Error in paste0("CSDB ", year, " created ", today, ".xlsx") : 
-#cannot coerce type 'closure' to vector of type 'character'
 
 today <- Sys.Date()
 
-output_file = paste0("CSDB ", year, " created ", today, ".xlsx")
+output_file = paste0("CSDB ", " created ", today, ".xlsx")
 write_xlsx(CSDB_data, here("Output", output_file))
 
 view(CSDB_data)
