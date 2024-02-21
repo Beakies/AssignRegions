@@ -181,11 +181,11 @@ CSDB_data$Distance = CSDB_data$DISTANCE
 CSDB_data <- CSDB_data %>%
   dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
                 Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
-                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
+                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
 
 # 22) Export as .xlsx including today's date
 today <- Sys.Date()
-output_file = paste0("CSDB", "created ", today, ".xlsx")
+output_file = paste0("CSDB ", "created ", today, ".xlsx")
 write_xlsx(CSDB_data, here("Output", output_file))
 
 view(CSDB_data)
