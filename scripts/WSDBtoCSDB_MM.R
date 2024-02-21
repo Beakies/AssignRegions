@@ -21,7 +21,7 @@ Effort_code_table <- read_csv(Effort_code_table)
 Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Data source code table.csv)"
 Data_source_code_table <- read_csv(Data_source_code_table)
 
-# START CSDB----
+# Start CSDB----
 # 1) Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
 CSDB_data <- WSDB_data %>%
   mutate(Year= ifelse(is.na(UTC_Year),Reported_Year, UTC_Year),
@@ -91,7 +91,7 @@ CSDB_data <- CSDB_data %>%
   mutate(Data_Source_Code = case_when(is.na(DATASOURCE_CD) ~ 0,
                                   TRUE ~ as.numeric(DATASOURCE_CD)))
 
-# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null). Note: IDREL_CDs that are identical to SpeciesID_Uncertainty_Codes remain unchanged. 
+# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null). Note: IDREL_CDs that are identical to SpeciesID_Uncertainty_Codes remain unchanged 
 # example: IDREL_CD = 1, SpeciesID_Uncertainty_Code = 1.
 CSDB_data <- CSDB_data %>%
   mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 9 ~ 0,
@@ -102,7 +102,7 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>%
   mutate(Count_Uncertainty_Code = coalesce(COUNT_UNCERTAINTY_CD, 0))
 
-# 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between.
+# 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between
 #might be useful instead of unite
 #%>%rowwise() %>%  # Apply operations row by row
 #  mutate(
@@ -138,7 +138,8 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = sprintf(BEAUFORT_CD, fmt = '%.1f'))
 
-# 15) Map Reported_SeaState and add one decimal place to Reported_SeaState (always zero, #.0)
+# 15) Map Reported_SeaState and remove NA's. Note: BEAUFORT_CDs that are identical to Reported_SeaStates remain unchanged 
+# example: BEAUFORT_CD = 7.0, Reported_SeaState = 7.0
 CSDB_data <- CSDB_data %>%
   mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
                                        Reported_SeaState == 'NA' ~ NA_character_,
@@ -150,7 +151,7 @@ CSDB_data <- CSDB_data %>%
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
-# 17a) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason. 
+# 17a) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason 
 CSDB_data$Suspected_Data_Issue_Reason = CSDB_data$SUSPECTED_DATA_ISSUE
 
 # 17b) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null 
@@ -176,8 +177,7 @@ CSDB_data$Min_Count = CSDB_data$MIN_COUNT
 CSDB_data$Max_Count = CSDB_data$MAX_COUNT
 CSDB_data$Distance = CSDB_data$DISTANCE
 
-# 21) dplyr select only the columns needed for CSDB data in the desired order.
-# Missing effort - where does it come from?----
+# 21) Select only the columns needed for CSDB data in the desired order
 CSDB_data <- CSDB_data %>%
   dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
                 Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
