@@ -5,8 +5,8 @@
 pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here)
 
 # Load test data sheet 
-file_path <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
-WSDB_data <- read_csv(file_path)
+path.in <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
+WSDB_data <- read_csv(path.in)
 
 # Read data tables
 Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Species code table.csv)"
@@ -23,6 +23,7 @@ Data_source_code_table <- read_csv(Data_source_code_table)
 
 # Start CSDB----
 # 1) Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
+
 CSDB_data <- WSDB_data %>%
   mutate(Year= ifelse(is.na(UTC_Year),Reported_Year, UTC_Year),
          Month= ifelse(is.na(UTC_Month),Reported_Month, UTC_Month),
@@ -34,16 +35,15 @@ CSDB_data <- CSDB_data %>%
   mutate(Regional_Primary_Key = paste(11, sprintf("%09d", WS_EVENT_ID), sep= ""))
 
 # 3) Change the format of UTC_Time and Reported_Time to hh:mm:ss
-# Suppress warnings - is it okay to use this fn so the script runs in one go? The warnings are just because NA's "fail to parse"----
-suppressWarnings(CSDB_data <- CSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(UTC_Time = sprintf("%04d", WS_TIME_UTC),
-         UTC_Time = parse_date_time(UTC_Time, orders= "HM"),
-         UTC_Time = format(UTC_Time, format = "%H:%M:%S")))
+         UTC_Time = parse_date_time(UTC_Time, orders= "HM", quiet = T),
+         UTC_Time = format(UTC_Time, format = "%H:%M:%S"))
 
-suppressWarnings(CSDB_data <- CSDB_data %>%
+CSDB_data <- CSDB_data %>%
   mutate(Reported_Time = sprintf("%04d", WS_TIME),
-         Reported_Time = parse_date_time(Reported_Time,orders= "HM"),
-         Reported_Time = format(Reported_Time, format = "%H:%M:%S")))
+         Reported_Time = parse_date_time(Reported_Time,orders= "HM", quiet = T),
+         Reported_Time = format(Reported_Time, format = "%H:%M:%S"))
 
 # 4) Map LCQUECODES_CD to Location_Uncertainty_Code. Note: Location_Uncertainty_Codes that are identical to LCQECODES remain unchanged 
 # example: LCQECODE = 1, Location_Uncertainty_Code = 1
@@ -186,6 +186,4 @@ CSDB_data <- CSDB_data %>%
 # 22) Export as .xlsx including today's date
 today <- Sys.Date()
 output_file = paste0("CSDB ", "created ", today, ".xlsx")
-write_xlsx(CSDB_data, here("Output", output_file))
-
-view(CSDB_data)
+write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Output\)", output_file))
