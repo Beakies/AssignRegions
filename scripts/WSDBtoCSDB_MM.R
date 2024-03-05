@@ -5,8 +5,8 @@
 pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here)
 
 # Load data sheet, change path as needed 
-path_in <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
-WSDB_data <- read_csv(path_in)
+input_file <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
+WSDB_data <- read_csv(input_file)
 
 # Read data tables
 Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Species code table.csv)"
