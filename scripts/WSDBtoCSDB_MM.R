@@ -4,21 +4,23 @@
 # Download and install packages if not already installed: 
 pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here)
 
-# Load data sheet, change path as needed 
-input_file <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Input\representative_dataset.csv)" 
-WSDB_data <- read_csv(input_file)
+# Load data sheet, change filename as needed---- 
+filename <- "representative_dataset"
+
+input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
+WSDB_data <- read_csv(input_file_path)
 
 # Read data tables
-Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Species code table.csv)"
+Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Species code table.csv)"
 Species_code_table <- read_csv(Species_code_table)
 
-Activity_type_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Activity type code table.csv)"
+Activity_type_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Activity type code table.csv)"
 Activity_type_code_table <- read_csv(Activity_type_code_table)
 
-Effort_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Effort code table.csv)"
+Effort_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Effort code table.csv)"
 Effort_code_table <- read_csv(Effort_code_table)
 
-Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Code tables\Data source code table.csv)"
+Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Data source code table.csv)"
 Data_source_code_table <- read_csv(Data_source_code_table)
 
 # Start CSDB dataframe----
@@ -177,5 +179,5 @@ CSDB_data <- CSDB_data %>%
 
 # 22) Export as .xlsx including the date of export
 today <- Sys.Date()
-output_file = paste0("CSDB ", "created ", today, ".xlsx")
-write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB to CSDB mapping-TEMP\Output\)", output_file))
+output_file = paste0("CSDB_", filename, "_", today, ".xlsx")
+write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
