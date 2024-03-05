@@ -162,7 +162,7 @@ CSDB_data <- CSDB_data %>%
 CSDB_data$Comments <- gsub(",","",CSDB_data$COMMENTS)
 CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
-# 20) Rename the following columns ----
+# 20) Rename the following columns
 CSDB_data$Species_Comments = CSDB_data$FEATURE_DESC
 CSDB_data$Reported_Count = CSDB_data$BEST_COUNT
 CSDB_data$Min_Count = CSDB_data$MIN_COUNT
