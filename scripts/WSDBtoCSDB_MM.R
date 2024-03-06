@@ -10,6 +10,13 @@ filename <- "representative_dataset"
 input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
 WSDB_data <- read_csv(input_file_path)
 
+library(stringi)# Read the file as raw
+raw_content <- readBin(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv"), what = "raw", n = 10000)# Detect the encoding
+detected_encodings <- stringi::stri_enc_detect(raw_content)# Print the detected encodings
+print(detected_encodings)
+
+Sys.setlocale("LC_ALL", "en_US.UTF-8")
+
 # Read data tables
 Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Species code table.csv)"
 Species_code_table <- read_csv(Species_code_table)
@@ -161,15 +168,24 @@ CSDB_data <- CSDB_data %>%
   mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f'))
 
 # 19) Remove commas from Comments and Behaviour_Comments
-CSDB_data$Comments <- gsub(",","",CSDB_data$COMMENTS)
-CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
+# CSDB_data$COMMENTS = iconv(CSDB_data$COMMENTS, to = "UTF-8")
+CSDB_data <- CSDB_data %>%
+  mutate(Comments = str_replace_all(COMMENTS,",",""),
+         Behaviour_Comments = str_replace_all(Behaviour_Comments, ",",""))
 
-# 20) Rename the following columns
-CSDB_data$Species_Comments = CSDB_data$FEATURE_DESC
-CSDB_data$Reported_Count = CSDB_data$BEST_COUNT
-CSDB_data$Min_Count = CSDB_data$MIN_COUNT
-CSDB_data$Max_Count = CSDB_data$MAX_COUNT
-CSDB_data$Distance = CSDB_data$DISTANCE
+# 20) Rename the following columns---- turn this into one pipe with rename function
+CSDB_data <- CSDB_data %>%
+  rename(Species_Comments = FEATURE_DESC,
+         Reported_Count = BEST_COUNT,
+         Min_Count = MIN_COUNT,
+         Max_Count = MAX_COUNT,
+         Distance = DISTANCE)
+         
+#$Species_Comments = CSDB_data$FEATURE_DESC
+#CSDB_data$Reported_Count = CSDB_data$BEST_COUNT
+#CSDB_data$Min_Count = CSDB_data$MIN_COUNT
+#CSDB_data$Max_Count = CSDB_data$MAX_COUNT
+#CSDB_data$Distance = CSDB_data$DISTANCE
 
 # 21) Select only the columns needed for CSDB data output in the desired order
 CSDB_data <- CSDB_data %>%
