@@ -161,8 +161,8 @@ CSDB_data <- CSDB_data %>%
   mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f'))
 
 # 19) Remove commas from Comments and Behaviour_Comments
-CSDB_data$Comments <- gsub(",","",CSDB_data$COMMENTS, useBytes = TRUE)
-CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments, useBytes = TRUE)
+CSDB_data$Comments <- gsub(",","",CSDB_data$COMMENTS)
+CSDB_data$Behaviour_Comments <- gsub(",","",CSDB_data$Behaviour_Comments)
 
 # 20) Rename the following columns
 CSDB_data$Species_Comments = CSDB_data$FEATURE_DESC
@@ -181,3 +181,4 @@ CSDB_data <- CSDB_data %>%
 today <- Sys.Date()
 output_file = paste0("CSDB_", filename, "_", today, ".xlsx")
 write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
+
