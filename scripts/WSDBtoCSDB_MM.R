@@ -106,11 +106,6 @@ CSDB_data <- CSDB_data %>%
   mutate(Count_Uncertainty = coalesce(COUNT_UNCERTAINTY_CD, 0))
 
 # 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between
-#might be useful instead of the unite function
-#%>%rowwise() %>%  # Apply operations row by row
-#  mutate(
-#    input_count = sum(c_across(27:32) == "Y", na.rm = TRUE))
-
 # 12a) Change 'NOT RECORDED' to NA from BEHAVIOUR_DESC columns
 CSDB_data = CSDB_data %>%
   mutate(BEHAVIOUR_DESC = case_when(BEHAVIOUR_DESC == "NOT RECORDED" ~ NA,
@@ -154,40 +149,31 @@ CSDB_data <- CSDB_data %>%
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
-# 17a) Rename WSDB SUSPECTED_DATA_ISSUE to Suspected_Data_Issue_Reason 
-CSDB_data$Suspected_Data_Issue_Reason = CSDB_data$SUSPECTED_DATA_ISSUE
+# 17) Rename the following columns 
+CSDB_data <- CSDB_data %>%
+  rename(Suspected_Data_Issue_Reason = SUSPECTED_DATA_ISSUE,
+         Species_Comments = FEATURE_DESC,
+         Reported_Count = BEST_COUNT,
+         Min_Count = MIN_COUNT,
+         Max_Count = MAX_COUNT,
+         Distance = DISTANCE)
 
-# 17b) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null 
+# 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null 
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
 
-# 18) Format Latitude and Longitude to four decimal places
+# 19) Format Latitude and Longitude to four decimal places
 CSDB_data <- CSDB_data %>%
   mutate(Latitude = sprintf(LATITUDE, fmt = '%.4f'))
 
 CSDB_data <- CSDB_data %>%
   mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f'))
 
-# 19) Remove commas from Comments and Behaviour_Comments
-# CSDB_data$COMMENTS = iconv(CSDB_data$COMMENTS, to = "UTF-8")
+# 20) Remove commas from Comments and Behaviour_Comments
 CSDB_data <- CSDB_data %>%
   mutate(Comments = str_replace_all(COMMENTS,",",""),
          Behaviour_Comments = str_replace_all(Behaviour_Comments, ",",""))
-
-# 20) Rename the following columns---- turn this into one pipe with rename function
-CSDB_data <- CSDB_data %>%
-  rename(Species_Comments = FEATURE_DESC,
-         Reported_Count = BEST_COUNT,
-         Min_Count = MIN_COUNT,
-         Max_Count = MAX_COUNT,
-         Distance = DISTANCE)
-         
-#$Species_Comments = CSDB_data$FEATURE_DESC
-#CSDB_data$Reported_Count = CSDB_data$BEST_COUNT
-#CSDB_data$Min_Count = CSDB_data$MIN_COUNT
-#CSDB_data$Max_Count = CSDB_data$MAX_COUNT
-#CSDB_data$Distance = CSDB_data$DISTANCE
 
 # 21) Select only the columns needed for CSDB data output in the desired order
 CSDB_data <- CSDB_data %>%
