@@ -20,16 +20,16 @@ print(detected_encodings)
 Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
 # Read data tables
-Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Species code table.csv)"
+Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\Species_code_table.csv)"
 Species_code_table <- read_csv(Species_code_table)
 
-Activity_type_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Activity type code table.csv)"
+Activity_type_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\Activity_type_code_table.csv)"
 Activity_type_code_table <- read_csv(Activity_type_code_table)
 
-Effort_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Effort code table.csv)"
+Effort_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\Effort_code_table.csv)"
 Effort_code_table <- read_csv(Effort_code_table)
 
-Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code tables\Data source code table.csv)"
+Data_source_code_table  <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\Data_source_code_table.csv)"
 Data_source_code_table <- read_csv(Data_source_code_table)
 
 # Start CSDB dataframe----
