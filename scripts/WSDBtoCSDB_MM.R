@@ -56,19 +56,19 @@ CSDB_data <- CSDB_data %>%
          Reported_Time = parse_date_time(Reported_Time,orders= "HM", quiet = T),
          Reported_Time = format(Reported_Time, format = "%H:%M:%S"))
 
-# 4) Map LCQECODE_CD to Location_Uncertainty_Code. Note: Location_Uncertainty_Codes that are identical to LCQECODE_CDs remain unchanged 
-# example: LCQECODE_CD = 1, Location_Uncertainty_Code = 1
+# 4) Map LCQECODE_CD to Location_Uncertainty. Note: Location_Uncertainty codes that are identical to LCQECODE_CDs remain unchanged 
+# example: LCQECODE_CD = 1, Location_Uncertainty = 1
 CSDB_data <- CSDB_data %>%
-  mutate(Location_Uncertainty_Code = case_when(LCQECODE_CD == 4 ~ 3, 
+  mutate(Location_Uncertainty = case_when(LCQECODE_CD == 4 ~ 3, 
                                                LCQECODE_CD == 5 ~ 3, 
                                                LCQECODE_CD == 6 ~ 3, 
                                                LCQECODE_CD == 7 ~ 3,
                                                is.na(LCQECODE_CD) ~ 0,
                                                TRUE ~ as.numeric(LCQECODE_CD)))
 
-# 5) Map LCQECODE_CD to Location_Uncertainty_Reason_Code
+# 5) Map LCQECODE_CD to Location_Uncertainty_Reason
 CSDB_data <- CSDB_data %>%
-  mutate(Location_Uncertainty_Reason_Code = case_when(LCQECODE_CD == 3 ~ 1, 
+  mutate(Location_Uncertainty_Reason = case_when(LCQECODE_CD == 3 ~ 1, 
                                                       LCQECODE_CD == 4 ~ 2, 
                                                       LCQECODE_CD == 5 ~ 3, 
                                                       LCQECODE_CD == 6 ~ 4, 
@@ -94,16 +94,16 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>% 
   left_join(Data_source_code_table, by = "DATASOURCE_CD")
 
-# 10) Map IDREL_CD to SpeciesID_Uncertainty_Code (put 0's in for null). Note: IDREL_CDs that are identical to SpeciesID_Uncertainty_Codes remain unchanged 
-# example: IDREL_CD = 1, SpeciesID_Uncertainty_Code = 1.
+# 10) Map IDREL_CD to SpeciesID_Uncertainty (put 0's in for null). Note: IDREL_CDs that are identical to SpeciesID_Uncertainty_Codes remain unchanged 
+# example: IDREL_CD = 1, SpeciesID_Uncertainty = 1.
 CSDB_data <- CSDB_data %>%
-  mutate(SpeciesID_Uncertainty_Code = case_when(IDREL_CD == 9 ~ 0,
+  mutate(SpeciesID_Uncertainty = case_when(IDREL_CD == 9 ~ 0,
                                                 is.na(IDREL_CD) ~ 0,
                                                 TRUE ~ as.numeric(IDREL_CD)))
 
-# 11) Map COUNT_UNCERTAINTY_CD to Count_Uncertainty_Code (put 0’s in for null)
+# 11) Map COUNT_UNCERTAINTY_CD to Count_Uncertainty (put 0’s in for null)
 CSDB_data <- CSDB_data %>%
-  mutate(Count_Uncertainty_Code = coalesce(COUNT_UNCERTAINTY_CD, 0))
+  mutate(Count_Uncertainty = coalesce(COUNT_UNCERTAINTY_CD, 0))
 
 # 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between
 #might be useful instead of the unite function
