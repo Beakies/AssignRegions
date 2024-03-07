@@ -191,8 +191,8 @@ CSDB_data <- CSDB_data %>%
 
 # 21) Select only the columns needed for CSDB data output in the desired order
 CSDB_data <- CSDB_data %>%
-  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty_Code, Location_Uncertainty_Reason_Code, 
-                Species_Code, ITIS_Code, SpeciesID_Uncertainty_Code, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty_Code, Animal_Status_Code,
+  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty, Location_Uncertainty_Reason, 
+                Species_Code, ITIS_Code, SpeciesID_Uncertainty, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty, Animal_Status_Code,
                 Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
 
 # 22) Export as .xlsx including the date of export
