@@ -116,13 +116,13 @@ CSDB_data = CSDB_data %>%
   mutate(BEHAVIOUR_DESC = case_when(BEHAVIOUR_DESC == "NOT RECORDED" ~ NA,
                                     .default = BEHAVIOUR_DESC),
          BEHAVIOUR_DESC_1 = case_when(BEHAVIOUR_DESC_1 == "NOT RECORDED" ~ NA,
-                                      .default = BEHAVIOUR_DESC),
+                                      .default = BEHAVIOUR_DESC_1),
          BEHAVIOUR_DESC_2 = case_when(BEHAVIOUR_DESC_2 == "NOT RECORDED" ~ NA,
-                                      .default = BEHAVIOUR_DESC),
+                                      .default = BEHAVIOUR_DESC_2),
          BEHAVIOUR_DESC_3 = case_when(BEHAVIOUR_DESC_3 == "NOT RECORDED" ~ NA,
-                                      .default = BEHAVIOUR_DESC),
+                                      .default = BEHAVIOUR_DESC_3),
          BEHAVIOUR_DESC_4 = case_when(BEHAVIOUR_DESC_4 == "NOT RECORDED" ~ NA,
-                                      .default = BEHAVIOUR_DESC))
+                                      .default = BEHAVIOUR_DESC_4))
 
 # 12b) Concatenate the five BEHAVIOUR_DESC columns separated by hyphens into a new column called Behaviour_Comments, removing NA's
 CSDB_data <- CSDB_data %>%
