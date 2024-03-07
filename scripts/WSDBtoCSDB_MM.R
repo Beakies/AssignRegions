@@ -10,11 +10,13 @@ filename <- "representative_dataset"
 input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
 WSDB_data <- read_csv(input_file_path)
 
+# Detect encodings of the raw data
 library(stringi)# Read the file as raw
 raw_content <- readBin(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv"), what = "raw", n = 10000)# Detect the encoding
 detected_encodings <- stringi::stri_enc_detect(raw_content)# Print the detected encodings
 print(detected_encodings)
 
+# Set encodings to UTF-8
 Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
 # Read data tables
