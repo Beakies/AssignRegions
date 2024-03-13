@@ -1,2 +1,2 @@
 # prepWSDB
- Script to assign regions to points in the WSDB
+ Scripts to format, check, and prepare data for upload to the WSDB and CSDB
