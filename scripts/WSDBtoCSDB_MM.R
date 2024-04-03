@@ -1,23 +1,25 @@
 # M. Murphy February 16th, 2024
 # This code is used to format data from WSDB into the form required for CSDB
 
+sessionInfo()
+
 # Download and install packages if not already installed: 
 pacman::p_load(writexl, readxl, readr, tidyverse, lubridate, here)
 
 # Load data sheet, change filename as needed---- 
-filename <- "representative_dataset"
+filename <- "CSDB_special_characters_full_CSDB_export_2024-03-21"
 
-input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
-WSDB_data <- read_csv(input_file_path)
+input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", filename,".csv")
+WSDB_data <- read_csv(input_file_path, locale = readr::locale(encoding = "Cp1252"))
 
 # Detect encodings of the raw data
 library(stringi)# Read the file as raw
-raw_content <- readBin(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv"), what = "raw", n = 10000)# Detect the encoding
-detected_encodings <- stringi::stri_enc_detect(raw_content)# Print the detected encodings
+raw_content <- readBin(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", filename,".csv"), what = "raw", n = 10000)# Detect the encoding
+detected_encodings <- stringi::stri_enc_detect(raw_content$COMMENTS)# Print the detected encodings
 print(detected_encodings)
 
 # Set encodings to UTF-8
-Sys.setlocale("LC_ALL", "en_US.UTF-8")
+#Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
 # Read data tables
 Species_code_table <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\Species_code_table.csv)"
@@ -183,6 +185,6 @@ CSDB_data <- CSDB_data %>%
 
 # 22) Export as .xlsx including the date of export
 today <- Sys.Date()
-output_file = paste0("CSDB_", filename, "_", today, ".xlsx")
-write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
+output_file = paste0("CSDB_", filename, "_", today, ".csv")
+write_csv(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
 
