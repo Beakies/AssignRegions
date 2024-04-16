@@ -6,6 +6,8 @@
 **.html
 .Rproj.user**
 output/*
+
+*_enc.R
 shapefiles/
 WSDB_Regions.html
 .Rproj**
