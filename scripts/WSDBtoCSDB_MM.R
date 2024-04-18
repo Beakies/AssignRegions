@@ -5,7 +5,7 @@
 pacman::p_load(writexl, readxl, tidyverse, lubridate, here)
 
 # Load data sheet, change filename as needed---- 
-filename <- "special_characters_full_CSDB_export"
+filename <- "1981"
 
 input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
 WSDB_data <- read_csv(input_file_path, locale = readr::locale(encoding = "Cp1252"))
@@ -163,7 +163,8 @@ CSDB_data_final <- CSDB_data %>%
                 Species_Code, ITIS_Code, SpeciesID_Uncertainty, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty, Animal_Status_Code,
                 Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
 
-# 22) Export as .xlsx including the date of export
+# 22) Export as .xlsx including the date of export with appropriate naming convention
 today <- Sys.Date()
-output_file = paste0("CSDB_", filename, "_", today, ".xlsx")
+DatasourceCode = if(length(unique(CSDB_data_final$Data_Source_Code)) == 1){print(unique(CSDB_data_final$Data_Source_Code))} else {print("Multi")}
+output_file = paste0(today,"_", filename, "_", DatasourceCode, ".xlsx")
 write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
