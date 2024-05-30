@@ -1,35 +1,77 @@
-# M. Murphy February 16th, 2024
-# This code is used to format data from WSDB into the form required for CSDB
 
-# Download and install packages if not already installed: 
-pacman::p_load(writexl, readxl, tidyverse, lubridate, here)
+# Script to format data exported from WSDB and prepare for batch input to CSDB 
 
-# Load data sheet, change filename as needed---- 
-filename <- "1981"
+# Input:
+  ## .csv file with data records exported from WSDB
 
-input_file_path <- paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Input\)", filename,".csv")
-WSDB_data <- read_csv(input_file_path, locale = readr::locale(encoding = "Cp1252"))
+# Output:
+  ## one .xlsx file per data source for data source codes with >100 records
+  ## one .xlsx file labeled "MULTI" including all data source codes with <100 records
 
-# Read data tables
-code_table_path <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Code_tables\)"
+    ## note that the criteria outlined above also apply to the "UNKNOWN" data source code ("0")
 
-Species_code_table <- read_csv(paste0(code_table_path, "Species_code_table.csv"))
-Activity_type_code_table <- read_csv(paste0(code_table_path, "Activity_type_code_table.csv"))
-Effort_code_table <- read_csv(paste0(code_table_path, "Effort_code_table.csv"))
-Data_source_code_table <- read_csv(paste0(code_table_path, "Data_source_code_table.csv"))
 
-# Start CSDB dataframe----
+# developed by M. Murphy 2024-02-16; modified by J. Stanistreet 2024-05-30
+
+#####################################################
+
+### TO RUN SCRIPT, MODIFY THIS LINE:
+
+# specify csv input file
+filename <- "2002"
+
+# run code below
+
+#####################################################
+
+##### PART 1: SET UP #####
+
+# Install/load required packages
+pacman::p_load(tidyverse, writexl)
+
+# Set input directory
+input_directory <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\CSDB\WSDB_to_CSDB\Exported_from_WSDB\)"
+
+# Set output directory
+output_directory = r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\CSDB\WSDB_to_CSDB\Formatted_for_CSDB\)"
+
+# Check if output subfolder exists & create it if needed
+if(!dir.exists(paste0(output_directory, filename)))
+   {
+  dir.create(paste0(output_directory, filename))
+  }
+
+output_subfolder = paste0(output_directory, filename, "\\")
+
+# Set data table directory
+code_table_directory <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\CSDB\WSDB_to_CSDB\Code_tables\)"
+
+# Load data tables
+Species_code_table <- read_csv(paste0(code_table_directory, "Species_code_table.csv"))
+Activity_type_code_table <- read_csv(paste0(code_table_directory, "Activity_type_code_table.csv"))
+Effort_code_table <- read_csv(paste0(code_table_directory, "Effort_code_table.csv"))
+Data_source_code_table <- read_csv(paste0(code_table_directory, "Data_source_code_table.csv"))
+
+# Load WSDB data
+WSDB_data <- read_csv(paste0(input_directory, filename, ".csv"),
+                      locale = readr::locale(encoding = "Cp1252"))
+
+# Turn off scientific notation
+options(scipen=999)
+
+##### PART 2: FORMAT DATA FOR CSDB #####
+
 # 1) Format Year Month and Day to pull from UTC_Year, UTC_Month, UTC_Day when available, if not use Reported_Year, Reported_Month, Reported_Day
-
 CSDB_data <- WSDB_data %>%
-  mutate(Year= ifelse(is.na(UTC_Year),Reported_Year, UTC_Year),
-         Month= ifelse(is.na(UTC_Month),Reported_Month, UTC_Month),
-         Day= ifelse(is.na(UTC_Day),Reported_Day, UTC_Day))
+  mutate(Year= ifelse(is.na(UTC_Year), Reported_Year, UTC_Year),
+         Month= ifelse(is.na(UTC_Month), Reported_Month, UTC_Month),
+         Day= ifelse(is.na(UTC_Day), Reported_Day, UTC_Day))
 
-# 2) Modify WS_EVENT_ID to Regional_Primary_Key so that the first 2 digits are “11” (representing MAR Region) and the total number of digits is 11 (including the WS_EVENT_ID)
+# 2) Modify WS_EVENT_ID to Regional_Primary_Key with first 2 digits “11” (representing MAR Region)
+# and the total number of digits is 11 (including the WS_EVENT_ID)
 # example: if WS_EVENT_ID is 1234, then the Regional_Primary_Key should be 11000001234  
 CSDB_data <- CSDB_data %>%
-  mutate(Regional_Primary_Key = paste(11, sprintf("%09d", WS_EVENT_ID), sep= ""))
+  mutate(Regional_Primary_Key = as.numeric(paste(11, sprintf("%09d", WS_EVENT_ID), sep= "")))
 
 # 3) Change the format of UTC_Time and Reported_Time to hh:mm:ss
 CSDB_data <- CSDB_data %>%
@@ -72,11 +114,11 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>% 
   left_join(Activity_type_code_table, by = "TRIPTYPE_CD")
 
-# 8) Map DATA_TYPE_CD to Effort using Effort_code_table
+# 8) Map DATA_TYPE_CD to Effort using Effort_code_table (Null DATA_TYPE_CD maps to "0")
 CSDB_data <- CSDB_data %>%
   left_join(Effort_code_table, by = "DATA_TYPE_CD")
 
-# 9) Map Data_Source_Code using Data_source_table (note that this is ordered by CSDB code)
+# 9) Map Data_Source_Code using Data_source_table (Null DATASOURCE_CD maps to "0")
 CSDB_data <- CSDB_data %>% 
   left_join(Data_source_code_table, by = "DATASOURCE_CD")
 
@@ -89,20 +131,17 @@ CSDB_data <- CSDB_data %>%
 
 # 11) Map COUNT_UNCERTAINTY_CD to Count_Uncertainty (put 0’s in for null)
 CSDB_data <- CSDB_data %>%
-  mutate(Count_Uncertainty = coalesce(COUNT_UNCERTAINTY_CD, 0))
+  mutate(Count_Uncertainty = case_when(is.na(COUNT_UNCERTAINTY_CD) ~ 0,
+                                        TRUE ~ as.numeric(COUNT_UNCERTAINTY_CD)))
 
 # 12) Create column called Behaviour_Comments that concatenates the five BEHAVIOUR_DESC columns into the one column with hyphens in between
 # 12a) Change 'NOT RECORDED' to NA from BEHAVIOUR_DESC columns
 CSDB_data = CSDB_data %>%
-  
-  ##JS: option to do this in fewer lines of code
-  
   mutate(across(starts_with("BEHAVIOUR_DESC"),~ case_when(. == "NOT RECORDED" ~ NA_character_,
                                                           TRUE ~ .), .names = "new_{.col}"))
 
 # 12b) Concatenate the five BEHAVIOUR_DESC columns separated by hyphens into a new column called Behaviour_Comments, removing NA's
 CSDB_data <- CSDB_data %>%
-  
   unite('Behaviour_Comments', c('new_BEHAVIOUR_DESC','new_BEHAVIOUR_DESC_1','new_BEHAVIOUR_DESC_2','new_BEHAVIOUR_DESC_3','new_BEHAVIOUR_DESC_4'), sep=" - ", na.rm = TRUE)
 
 # 13) Map Animal_Status_Code using GEARIMPACT_CD and Behaviour_Comments
@@ -114,57 +153,72 @@ CSDB_data <- CSDB_data %>%
                                         is.na(GEARIMPACT_CD) ~ 0,
                                         TRUE ~ as.numeric(GEARIMPACT_CD)))
 
-# 14) Map BEAUFORT_CD to Reported_SeaState and add one decimal place (always zero, #.0)
+# 14) Map BEAUFORT_CD to Reported_SeaState, replace '13' with NA
 CSDB_data <- CSDB_data %>%
-  mutate(Reported_SeaState = sprintf(BEAUFORT_CD, fmt = '%.1f'))
+  mutate(Reported_SeaState = case_when(BEAUFORT_CD == 13 ~ NA,
+                                       TRUE ~ BEAUFORT_CD))
 
-# 15) Map BEAUFORT_CD to Reported_SeaState and remove NA's. Note: BEAUFORT_CDs that are identical to Reported_SeaStates remain unchanged 
-# example: BEAUFORT_CD = 7.0, Reported_SeaState = 7.0
-CSDB_data <- CSDB_data %>%
-  mutate(Reported_SeaState = case_when(Reported_SeaState == '13.0' ~ NA_character_,
-                                       Reported_SeaState == 'NA' ~ NA_character_,
-                                       TRUE ~ as.character(Reported_SeaState)))
-
-# 16) Map PLATFORM_TYPE_CD to Platform_Type_Code
+# 15) Map PLATFORM_TYPE_CD to Platform_Type_Code
 CSDB_data <- CSDB_data %>%
   mutate(Platform_Type_Code = case_when(PLATFORM_TYPE_CD == 4 ~ 0,
                                         is.na(PLATFORM_TYPE_CD) ~ 0,
                                         TRUE ~ as.numeric(PLATFORM_TYPE_CD)))
 
-# 17) Rename the following columns 
+# 16) Rename the following columns 
 CSDB_data <- CSDB_data %>%
-  rename(Suspected_Data_Issue_Reason = SUSPECTED_DATA_ISSUE,
+  mutate(Suspected_Data_Issue_Reason = SUSPECTED_DATA_ISSUE,
          Species_Comments = FEATURE_DESC,
          Reported_Count = BEST_COUNT,
          Min_Count = MIN_COUNT,
          Max_Count = MAX_COUNT,
-         Distance = DISTANCE)
+         Distance = DISTANCE,
+         Latitude = LATITUDE,
+         Longitude = LONGITUDE,
+         Comments = COMMENTS)
 
-# 18) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null 
+# 17) Add a column called Suspected_Data_Issue before Suspected_Data_Issue_Reason, and populate with ‘Yes’ when the reason column is not null and ‘No’ when it is null 
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
-
-# 19) Format Latitude and Longitude to four decimal places
-CSDB_data <- CSDB_data %>%
-  mutate(Latitude = sprintf(LATITUDE, fmt = '%.4f'))
-
-CSDB_data <- CSDB_data %>%
-  mutate(Longitude = sprintf(LONGITUDE, fmt = '%.4f')) %>% 
   
-  # 20) Remove commas from Comments and Behaviour_Comments
-  
-  mutate(Comments = str_replace_all(COMMENTS,",",""),
-         Behaviour_Comments = str_replace_all(Behaviour_Comments, ",",""))
+# 20) Remove commas from Comments and Behaviour_Comments (DO WE NEED TO DO THIS?)
+  # mutate(Comments = str_replace_all(COMMENTS,",",""),
+  #        Behaviour_Comments = str_replace_all(Behaviour_Comments, ",",""))
 
-# 21) Select only the columns needed for CSDB data output in the desired order
-CSDB_data_final <- CSDB_data %>%
-  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, Location_Uncertainty, Location_Uncertainty_Reason, 
-                Species_Code, ITIS_Code, SpeciesID_Uncertainty, Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty, Animal_Status_Code,
-                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
+# 18) Select only the columns needed for CSDB data output in the desired order
+CSDB_data_formatted <- CSDB_data %>%
+  dplyr::select(Regional_Primary_Key, Year, Month, Day, UTC_Time, Reported_Time, Latitude, Longitude, 
+                Location_Uncertainty, Location_Uncertainty_Reason, Species_Code, ITIS_Code, SpeciesID_Uncertainty, 
+                Species_Comments, Reported_Count, Min_Count, Max_Count, Count_Uncertainty, Animal_Status_Code,
+                Behaviour_Comments, Distance, Reported_SeaState, Platform_Type_Code, Activity_Type_Code, Effort, 
+                Data_Source_Code, Suspected_Data_Issue, Suspected_Data_Issue_Reason, Comments)
 
-# 22) Export as .xlsx including the date of export with appropriate naming convention
-today <- Sys.Date()
-DatasourceCode = if(length(unique(CSDB_data_final$Data_Source_Code)) == 1){print(unique(CSDB_data_final$Data_Source_Code))} else {print("Multi")}
-output_file = paste0(today,"_", filename, "_", DatasourceCode, ".xlsx")
-write_xlsx(CSDB_data, paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_12\WSDB\WSDB_to_CSDB\Output\)", output_file))
+##### PART 3: EXPORT FOR BATCH UPLOAD TO CSDB #####
+
+# Filter for data sources with >100 records
+large_data_source <- CSDB_data_formatted %>% 
+  group_by(Data_Source_Code) %>% 
+  filter(n() > 100) %>% 
+  ungroup()
+
+# Split into list of data frames based on data source code
+lds_list<-split(large_data_source, large_data_source$Data_Source_Code)
+
+# Filter for data sources with <100 records
+multi_source <- CSDB_data_formatted %>% 
+  group_by(Data_Source_Code) %>% 
+  filter(n() < 100) %>% 
+  ungroup() 
+
+# Append multi_source data frame to export list
+export_list<-append(lds_list, setNames(list(multi_source), paste("MULTI")))
+
+# Export .xlsx files
+lapply(names(export_list), function (x) {
+  write_xlsx(export_list[[x]],
+             path = paste0(
+               output_subfolder, format(Sys.Date(), "%Y%m%d"), "_", filename, "_", x, ".xlsx"
+             ))
+})
+
+
