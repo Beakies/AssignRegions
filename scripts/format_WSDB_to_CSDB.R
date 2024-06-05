@@ -18,7 +18,7 @@
 ### TO RUN SCRIPT, MODIFY THIS LINE:
 
 # specify csv input file
-filename <- "2002"
+filename <- "2014"
 
 # run code below
 
@@ -180,10 +180,6 @@ CSDB_data <- CSDB_data %>%
 CSDB_data <- CSDB_data %>%
   mutate(Suspected_Data_Issue = case_when(is.na(Suspected_Data_Issue_Reason) ~ "No",
                                           TRUE ~ "Yes"))
-  
-# 20) Remove commas from Comments and Behaviour_Comments (DO WE NEED TO DO THIS?)
-  # mutate(Comments = str_replace_all(COMMENTS,",",""),
-  #        Behaviour_Comments = str_replace_all(Behaviour_Comments, ",",""))
 
 # 18) Select only the columns needed for CSDB data output in the desired order
 CSDB_data_formatted <- CSDB_data %>%
@@ -195,10 +191,10 @@ CSDB_data_formatted <- CSDB_data %>%
 
 ##### PART 3: EXPORT FOR BATCH UPLOAD TO CSDB #####
 
-# Filter for data sources with >100 records
+# Filter for data sources with >= 100 records
 large_data_source <- CSDB_data_formatted %>% 
   group_by(Data_Source_Code) %>% 
-  filter(n() > 100) %>% 
+  filter(n() >= 100) %>% 
   ungroup()
 
 # Split into list of data frames based on data source code
