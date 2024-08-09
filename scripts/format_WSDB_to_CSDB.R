@@ -206,11 +206,19 @@ multi_source <- CSDB_data_formatted %>%
   filter(n() < 100) %>% 
   ungroup() 
 
-# If multi-source dataframe has data, append to lds list for export
-if(nrow(multi_source)>0)
-  {
+# If multiple data sources with <100 records, create MULTI list for output
+if(nrow(multi_source)>0 && length(unique(multi_source$Data_Source_Code))>1) {
+  
   export_list <- append(lds_list, setNames(list(multi_source), paste("MULTI")))
+
+  # If only one data source with <100 records, created named output
+  } else if (nrow(multi_source)>0 && length(unique(multi_source$Data_Source_Code))==1) { 
+  
+  sds_list<-split(multi_source, multi_source$Data_Source_Code)
+  export_list <- append(lds_list, sds_list)
+  
 } else {
+  
   export_list <- lds_list
 }
 
