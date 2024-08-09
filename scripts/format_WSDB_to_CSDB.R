@@ -206,8 +206,13 @@ multi_source <- CSDB_data_formatted %>%
   filter(n() < 100) %>% 
   ungroup() 
 
-# Append multi_source data frame to export list
-export_list<-append(lds_list, setNames(list(multi_source), paste("MULTI")))
+# If multi-source dataframe has data, append to lds list for export
+if(nrow(multi_source)>0)
+  {
+  export_list <- append(lds_list, setNames(list(multi_source), paste("MULTI")))
+} else {
+  export_list <- lds_list
+}
 
 # Export .xlsx files
 lapply(names(export_list), function (x) {
